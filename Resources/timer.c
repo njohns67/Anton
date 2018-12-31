@@ -16,10 +16,10 @@ int main(int argc, char **argv){
     if(argc > 3){
         num2 = convert(atoi(argv[3]), *argv[4]);
         sleep(num1 + num2);
-        system("mpg123 Responses/TimerFinish.mp3");
+        system("mpg123 /home/pi/Anton/Responses/TimerFinish.mp3");
     }
     else{
         sleep(num1);
-        system("mpg123 Responses/TimerFinish.mp3");
+        system("mpg123 /home/pi/Anton/Responses/TimerFinish.mp3");
     }
 }
