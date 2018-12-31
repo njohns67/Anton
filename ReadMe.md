@@ -20,6 +20,7 @@ Anton relies on Snowboy for Python3 for hotword detection and must be installed 
 
 # Commands
 Anton's current hotword is "Hey Anton", but can be changed with a few minor tweaks.
+
 **Current Commands Include:** 
 - Turn on the lights (Temporary command, currently connected to an Arduino Nano)
 - Turn on/off the green/red light
