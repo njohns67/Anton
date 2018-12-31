@@ -6,6 +6,7 @@ and other devices.
 
 # Dependencies
 Anton relies on Snowboy for Python3 for hotword detection and must be installed for Anton to work properly. Additionally various python libraries are needed as well as google text to speech credentials for certain functions.
+
 **List of python modules required:**
 - Snowboy
 - weather
