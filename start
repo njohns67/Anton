@@ -1,2 +1,2 @@
-export GOOGLE_APPLICATION_CREDENTIALS="/home/pi/Anton/Key.json"
-python3 base.py Hey_Anton.pmdl
+export GOOGLE_APPLICATION_CREDENTIALS="/home/pi/Anton/Resources/Key.json"
+(cd PyModules && python3 base.py /home/pi/Anton/Resources/Hey_Anton.pmdl)
