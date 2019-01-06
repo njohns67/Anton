@@ -5,8 +5,10 @@ import getJoke as joke
 import APICalls
 import tts
 import subprocess
-
-s = serial.Serial(port="/dev/ttyUSB0", baudrate=9600)
+try:
+    s = serial.Serial(port="/dev/ttyUSB0", baudrate=9600)
+except:
+    print("No serial available")
 directory = "/home/pi/Anton/Responses/"
 todayWeatherArrays = [["todays", "weather"], ["today", "weather"], ["today's", "weather"], ["the weather in"]]
 tomWeatherArrays = [["tomorrow", "weather"], ["tomorrows", "weather"], ["tomorrow's", "weather"]]
@@ -67,9 +69,10 @@ def parse(transcript):
         if test == 2:
             APICalls.getTomForecast(city)
     elif "alarm" in transcript or "timer" in transcript:
-        if not any(x in transcript for x in ["minutes", "seconds", "hours"]):
+        if not any(x in transcript for x in ["minutes", "seconds", "hours", "minute", "hour"]):
             playSound("BadTimer")
             return
+        a, playString = transcript.split("for")
         transcript2 = transcript.split()
         nums = []
         indices = []
@@ -101,6 +104,37 @@ def parse(transcript):
         except Exception as e:
             print(e)
             playSound("BadRec")
+        tts.text2speech("I've set your timer for" + playString)
+
+    elif "play" in transcript:
+        transcript = transcript.split()
+        index = transcript.index("play")
+        index2 = transcript.index("by")
+        song = ""
+        artist = ""
+        for x in range(index+1, index2):
+            song += transcript[x]
+            song += " "
+        for x in range(index2+1, len(transcript)):
+            artist += transcript[x]
+            artist += " "
+        print(song)
+        print(artist)
+        os.system("mpc clear; mpc search title \"" + song + "\" artist \"" + artist + "\" | mpc add; mpc play")
+
+    elif "pause" in transcript:
+        os.system("mpc pause")
+
+    elif "volume" in transcript:
+        if "up" in transcript:
+            os.system("amixer set Master 10%+")
+        elif "down" in transcript:
+            os.system("amixer set Master 10%-")
+        else:
+            #TODO: Add "Would you like the volume up or down?" response
+            return
+
+
     elif "exit" in transcript:
         playSound("Goodbye")
         exit(0)
