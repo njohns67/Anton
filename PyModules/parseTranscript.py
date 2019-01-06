@@ -17,6 +17,7 @@ def playSound(file):
 	os.system("mpg123 " + directory + file + ".mp3")
 
 def parse(transcript):
+    transcript = transcript.lower()
     if "on the red" in transcript:
         s.write(b"1")
         playSound("RedLightOn")
@@ -108,8 +109,19 @@ def parse(transcript):
 
     elif "play" in transcript:
         transcript = transcript.split()
+        if len(transcript) < 3:
+            os.system("mpc play")
+            return
         index = transcript.index("play")
-        index2 = transcript.index("by")
+        try:
+            index2 = transcript.index("by")
+        except ValueError:
+            song = ""
+            for x in range(index+1, len(transcript)):
+                song += transcript[x]
+                song += " "
+            os.system("mpc clear; mpc search title \"" + song + "\" | mpc add; mpc play")
+            return
         song = ""
         artist = ""
         for x in range(index+1, index2):
