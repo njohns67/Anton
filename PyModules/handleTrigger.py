@@ -13,8 +13,17 @@ dong = "/home/pi/Anton/Sounds/dong.wav"
 ding = "/home/pi/Anton/Sounds/ding.wav"
 attempts = 0
 
+testPlaying = 0
+
 def record():
-    subprocess.Popen(["mpc", "volume", "0"])
+    global testPlaying
+    #os.system("mpc volume 0")
+    try:
+        playing = subprocess.check_output("mpc | grep -o playing", shell=True)
+        os.system("mpc pause")
+        testPlaying = 1
+    except subprocess.CalledProcessError:
+        pass
     subprocess.Popen(["play", dong])
     recording = sd.rec(int(length * samplerate), samplerate=samplerate, channels=1)
     sd.wait()
@@ -24,9 +33,12 @@ def record():
         pT.parse("Bad transcript")
         return
     pT.parse(transcript)
+    if testPlaying == 1:
+        os.system("mpc play")
+        testPlaying = 0
 
 def processAudio():
-    subprocess.Popen(["mpc", "volume", "100"])
+    global testPlaying
     subprocess.Popen(["play", ding])
     reg = sr.Recognizer()
     audio = sr.AudioFile(filename)

@@ -1,9 +1,7 @@
 from weather import Weather, Unit
 import tts
 
-def getTodaysForecast(city):
-    if city == "":
-        city = "Knoxville"
+def getTodaysForecast(city="Knoxville"):
     weather = Weather(unit=Unit.FAHRENHEIT)
     location = weather.lookup_by_location(city)
     forecasts = location.forecast

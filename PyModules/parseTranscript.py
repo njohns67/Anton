@@ -113,28 +113,48 @@ def parse(transcript):
             os.system("mpc play")
             return
         index = transcript.index("play")
+        index2 = 0
         try:
             index2 = transcript.index("by")
         except ValueError:
             song = ""
-            for x in range(index+1, len(transcript)):
-                song += transcript[x]
-                song += " "
-            os.system("mpc clear; mpc search title \"" + song + "\" | mpc add; mpc play")
-            return
+            if "next" in transcript:
+                for x in range(index+1, len(transcript)-1):
+                    song += transcript[x]
+                    song += " "
+                os.system("mpc search title \"" + song + "\" | head -n 1 | mpc add")
+            else:
+                for x in range(index+1, len(transcript)):
+                    song += transcript[x]
+                    song += " "
+                os.system("mpc clear; mpc search title \"" + song + "\" | head -n 1 | mpc add; mpc play")
+                return
         song = ""
         artist = ""
-        for x in range(index+1, index2):
-            song += transcript[x]
-            song += " "
-        for x in range(index2+1, len(transcript)):
-            artist += transcript[x]
-            artist += " "
-        print(song)
-        print(artist)
-        os.system("mpc clear; mpc search title \"" + song + "\" artist \"" + artist + "\" | mpc add; mpc play")
+        if "next" in transcript:
+            for x in range(index+1, index2):
+                song += transcript[x]
+                song += " "
+            for x in range(index2+1, len(transcript)-1):
+                artist += transcript[x]
+                artist += " "
+            print(song)
+            print(artist)
+            os.system("mpc search title \"" + song + "\" artist \"" + artist + "\" | head -n 1 | mpc add;")
+        else:
+            for x in range(index+1, index2):
+                song += transcript[x]
+                song += " "
+            for x in range(index2+1, len(transcript)):
+                artist += transcript[x]
+                artist += " "
+            print(song)
+            print(artist)
+            os.system("mpc clear; mpc search title \"" + song + "\" artist \"" + artist + "\" | head -n 1 | mpc add; mpc play")
 
-    elif "pause" in transcript:
+    elif "pause" in transcript or ("stop" in transcript and "music" in transcript):
+        HT.testPlaying = 0
+        print("Pausing")
         os.system("mpc pause")
 
     elif "volume" in transcript:
@@ -146,6 +166,8 @@ def parse(transcript):
             #TODO: Add "Would you like the volume up or down?" response
             return
 
+    elif "skip" in transcript:
+        os.system("mpc next")
 
     elif "exit" in transcript:
         playSound("Goodbye")
