@@ -140,24 +140,25 @@ def willItRain(city="Knoxville", day="today"):
 
 def getWeatherDate(city="Menomonee Falls", day="today"):
     day = day.lower()
-    daysDict = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6}
-    currentDay = datetime.datetime.today().weekday()
-    keys = list(daysDict.keys())
-    values = list(daysDict.values())
-    targetDay = -1
-    if day == "today":
-        targetDay = keys[values.index(currentDay)]
-    else:
-        targetDay = daysDict[day]
-    addDays = 0
-    for x in range(0, 7):
-        if currentDay == targetDay:
-            break
-        currentDay += 1
-        if currentDay == 7:
-            currentDay = 0
-        addDays += 1
-    print(str(addDays))
+    #daysDict = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6}
+    #currentDay = datetime.datetime.today().weekday()
+    #keys = list(daysDict.keys())
+    #values = list(daysDict.values())
+    #targetDay = -1
+    #if day == "today":
+    #    targetDay = keys[values.index(currentDay)]
+    #else:
+    #    targetDay = daysDict[day]
+    #addDays = 0
+    #for x in range(0, 7):
+    #    if currentDay == targetDay:
+    #         break
+    #    currentDay += 1
+    #    if currentDay == 7:
+    #        currentDay = 0
+    #    addDays += 1
+    #print(str(addDays))
+    addDays = getTargetDay(day)
     if city == "":
         city = "Menomonee Falls"
     base = "http://api.openweathermap.org/data/2.5/forecast?"
@@ -167,16 +168,71 @@ def getWeatherDate(city="Menomonee Falls", day="today"):
         tts.text2speech("I couldn't find that city")
         return
     x = response.json()
+    speakArr = parseWeatherResponse(x, addDays)
+    speak = speakArr[0]
+    speakRain = speakArr[1]
+    rainBool = speakArr[2]
+    #tempMax = 0
+    #tempMin = 200
+    #desc = x["list"][4]["weather"][0]["description"]
+    #rain = [-1, -1]
+    #for i in range(addDays, addDays + 8):
+    #    if x["list"][i]["main"]["temp_max"] > tempMax:
+    #        tempMax = x["list"][i]["main"]["temp_max"]
+    #    if x["list"][i]["main"]["temp_min"] < tempMin:
+    #        tempMin = x["list"][i]["main"]["temp_min"]
+    #    if "rain" in x["list"][i]["weather"][0]["description"]:
+    #        if rain[0] == -1:
+    #            rain[0] = i
+    #            rain[1] = i
+    #        else:
+    #            rain[1] = i
+    #        if i < 4:
+                # rainMorning = 1
+    #        elif i > 3 and i < 7:
+                # rainDay = 1
+    #        elif i > 6:
+    #            rainNight = 1
+    #rain[0] *= 3
+    #rain[1] *= 3
+
+    #if rain[0] > 12:
+    #    rain[0] = str(rain[0] - 12) + "pm"
+    #elif rain[0] == 12:
+    #    rain[0] = str(rain[0]) + "pm"
+    #else:
+    #    rain[0] = str(rain[0]) + "am"
+
+    #if rain[0] == 0:
+    #    rain[0] = "12am"
+
+    #if rain[1] > 12:
+    #    rain[1] = str(rain[1] - 12) + "pm"
+    #elif rain[1] == 12:
+    #    rain[1] = str(rain[1]) + "pm"
+    #else:
+    #    rain[1] = str(rain[1]) + "am"
+    #if rain[1] == 0:
+    #    rain[1] = "12am"
+    
+    #speakRain = "It will rain between " + str(rain[0]) + " and " + str(rain[1])
+    #speak = city + " will have " + desc + " with a high of " + str(int(tempMax)) + " and a low of " + str(int(tempMin)) + " on " + day
+    tts.text2speech(speak)
+    if rainBool:
+        print(speakRain)
+        tts.text2speech(speakRain)
+
+def parseWeatherResponse(response, addDays):
     tempMax = 0
     tempMin = 200
-    desc = x["list"][4]["weather"][0]["description"]
+    desc = response["list"][4]["weather"][0]["description"]
     rain = [-1, -1]
     for i in range(addDays, addDays + 8):
-        if x["list"][i]["main"]["temp_max"] > tempMax:
-            tempMax = x["list"][i]["main"]["temp_max"]
-        if x["list"][i]["main"]["temp_min"] < tempMin:
-            tempMin = x["list"][i]["main"]["temp_min"]
-        if "rain" in x["list"][i]["weather"][0]["description"]:
+        if response["list"][i]["main"]["temp_max"] > tempMax:
+            tempMax = response["list"][i]["main"]["temp_max"]
+        if response["list"][i]["main"]["temp_min"] < tempMin:
+            tempMin = response["list"][i]["main"]["temp_min"]
+        if "rain" in response["list"][i]["weather"][0]["description"]:
             if rain[0] == -1:
                 rain[0] = i
                 rain[1] = i
@@ -211,11 +267,35 @@ def getWeatherDate(city="Menomonee Falls", day="today"):
         rain[1] = "12am"
     
     speakRain = "It will rain between " + str(rain[0]) + " and " + str(rain[1])
-    speak = city + " will have " + desc + " with a high of " + str(int(tempMax)) + " and a low of " + str(int(tempMin)) + " on " + day
-    print(speak)
-    tts.text2speech(speak)
-    if rain[0] != "-3am":
-        print(speakRain)
-        tts.text2speech(speakRain)
-    
-#getWeatherDate("", "sunday")
+    speak = (city + " will have " + desc + " with a high of " + str(int(tempMax)) 
+             + " and a low of " + str(int(tempMin)) + " on " + day)
+    rainBool = 0
+    if rain[0] != "3am":
+        rainBool = 1
+    else:
+        rainBool = 0
+    ret = [speak, speakRain, rainBool]
+    return ret
+
+#Returns the number of days to add to the current day to get to the target day
+def getTargetDay(day="today"):
+    daysDict = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3, "friday": 4, "saturday": 5, "sunday": 6}
+    currentDay = datetime.datetime.today().weekday()
+    keys = list(daysDict.keys())
+    values = list(daysDict.values())
+    targetDay = -1
+    if day == "today":
+        targetDay = keys[values.index(currentDay)]
+    else:
+        targetDay = daysDict[day]
+    addDays = 0
+    for x in range(0, 7):
+        if currentDay == targetDay:
+            break
+        currentDay += 1
+        if currentDay == 7:
+            currentDay = 0
+        addDays += 1
+    print(str(addDays))
+    return addDays
+getWeatherDate("", "sunday")
