@@ -6,6 +6,8 @@ import APICalls
 import tts
 import subprocess
 import wifiDevices
+import cfg
+
 directory = "/home/pi/Anton/Responses/"
 todayWeatherArrays = [["todays", "weather"], ["today", "weather"], ["today's", "weather"], ["the weather in"]]
 tomWeatherArrays = [["tomorrow", "weather"], ["tomorrows", "weather"], ["tomorrow's", "weather"]]
@@ -75,8 +77,10 @@ def parse(transcript):
         try:
             if len(nums) == 1:
                 p = subprocess.Popen(["/home/pi/Anton/Resources/timer", str(nums[0]), letters[0]])
+                cfg.processes.append(p)
             else:
                 p = subprocess.Popen(["/home/pi/Anton/Resources/timer", str(nums[0]), letters[0], str(nums[1]), letters[1]])
+                cfg.processes.append(p)
         except Exception as e:
             print(e)
             playSound("BadRec")

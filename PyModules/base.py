@@ -5,6 +5,7 @@ import snowboydecoder
 import signal
 import os
 import handleTrigger
+import cfg
 
 interrupted = False
 
@@ -15,6 +16,10 @@ def trigger():
 def signal_handler(signal, frame):
     global interrupted
     interrupted = True
+    for x in cfg.processes:
+        x.send_signal(signal)
+        x.wait()
+    os.system("stty sane")
 
 
 def interrupt_callback():

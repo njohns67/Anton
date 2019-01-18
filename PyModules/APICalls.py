@@ -3,10 +3,14 @@ import datetime
 import requests, json
 from urllib.parse import quote
 
-with open("Key.txt", "r") as file:
-    key = file.read()
+
+def getKey():
+    with open("/home/pi/Anton/Resources/Key.txt", "r") as file:
+        key = file.readline().strip()
+        return key
 
 def getTodaysForecast(city="Menomonee Falls"):
+    key = getKey()
     if city == "":
         city = "Menomonee Falls"
     base = "http://api.openweathermap.org/data/2.5/weather?"
@@ -16,17 +20,18 @@ def getTodaysForecast(city="Menomonee Falls"):
         tts.text2speech("I couldn't find that city")
         return
     x = response.json()
-    print(x)
     speak = city + " currently has " + x["weather"][0]["description"] + " with a high of " + str(int(x["main"]["temp_max"])) + " and a low of " + str(int(x["main"]["temp_min"]))
     tts.text2speech(speak)
 
 def getTomForecast(city="Menomonee Falls"):
+    key = getKey()
     if city == "":
         city = "Menomonee Falls"
     base = "http://api.openweathermap.org/data/2.5/forecast?"
     url = base + "appid=" + key + "&q=" + city + "&units=imperial"
     response = requests.get(url)
     if(response.status_code != 200):
+        print(response.status_code)
         tts.text2speech("I couldn't find that city")
         return
     x = response.json()
@@ -76,7 +81,7 @@ def getTomForecast(city="Menomonee Falls"):
     speakRain = "It will rain between " + str(rain[0]) + " and " + str(rain[1])
     speak = city + " will have " + desc + " with a high of " + str(int(tempMax)) + " and a low of " + str(int(tempMin)) + " tomorrow"
     tts.text2speech(speak)
-    if rain[0] != "-3":
+    if rain[0] != "-3am":
         tts.text2speech(speakRain)
 
 def willItRain(city="Knoxville", day="today"):

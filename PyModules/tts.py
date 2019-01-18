@@ -1,5 +1,6 @@
 from google.cloud import texttospeech as tts
 import os
+
 def text2speech(TEXT, file="delme", PLAY=1):
     client = tts.TextToSpeechClient()
     sinput = tts.types.SynthesisInput(text=TEXT)
