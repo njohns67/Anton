@@ -7,7 +7,8 @@ import parseTranscript as pT
 import wave, pyaudio
 
 length = 3.5
-samplerate = 44100
+samplerate = 48000
+channels = 1
 filename = "temp.wav"
 dong = "/home/pi/Anton/Sounds/dong.wav"
 ding = "/home/pi/Anton/Sounds/ding.wav"
@@ -17,7 +18,6 @@ testPlaying = 0
 
 def record():
     global testPlaying
-    #os.system("mpc volume 0")
     try:
         playing = subprocess.check_output("mpc | grep -o playing", shell=True)
         os.system("mpc pause")
@@ -25,7 +25,7 @@ def record():
     except subprocess.CalledProcessError:
         pass
     subprocess.Popen(["play", dong])
-    recording = sd.rec(int(length * samplerate), samplerate=samplerate, channels=1)
+    recording = sd.rec(int(length * samplerate), samplerate=samplerate, channels=channels)
     sd.wait()
     sf.write(filename, recording, samplerate)
     transcript = processAudio()

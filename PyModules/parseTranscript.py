@@ -5,10 +5,7 @@ import getJoke as joke
 import APICalls
 import tts
 import subprocess
-try:
-    s = serial.Serial(port="/dev/ttyUSB0", baudrate=9600)
-except:
-    print("No serial available")
+import wifiDevices
 directory = "/home/pi/Anton/Responses/"
 todayWeatherArrays = [["todays", "weather"], ["today", "weather"], ["today's", "weather"], ["the weather in"]]
 tomWeatherArrays = [["tomorrow", "weather"], ["tomorrows", "weather"], ["tomorrow's", "weather"]]
@@ -18,31 +15,8 @@ def playSound(file):
 
 def parse(transcript):
     transcript = transcript.lower()
-    if "on the red" in transcript:
-        s.write(b"1")
-        playSound("RedLightOn")
-
-    elif "off the red" in transcript:
-        s.write(b"0")
-        playSound("RedLightOff")
-
-    elif "on the green" in transcript:
-        s.write(b"2")
-        playSound("GreenLightOn")
-
-    elif "off the green" in transcript:
-        s.write(b"3")
-        playSound("GreenLightOff")
-
-    elif "on both" in transcript or "on the lights" in transcript:
-        s.write(b"2")
-        s.write(b"1")
-        playSound("BothLightsOn")
-
-    elif "off both" in transcript or "off the lights" in transcript:
-        s.write(b"0")
-        s.write(b"3")
-        playSound("BothLightsOff")
+    if "light" in transcript and "on" in transcript:
+        wifiDevices.lightOn()
 
     elif "joke" in transcript:
         joke.play()
@@ -69,6 +43,7 @@ def parse(transcript):
                     break
         if test == 2:
             APICalls.getTomForecast(city)
+
     elif "alarm" in transcript or "timer" in transcript:
         if not any(x in transcript for x in ["minutes", "seconds", "hours", "minute", "hour"]):
             playSound("BadTimer")
@@ -168,6 +143,13 @@ def parse(transcript):
 
     elif "skip" in transcript:
         os.system("mpc next")
+
+    elif "feed" in transcript or "scout" in transcript:
+        playSound("FeedingScout")
+        wifiDevices.feedScout()
+
+    elif "beer" in transcript:
+        wifiDevices.beerMe()
 
     elif "exit" in transcript:
         playSound("Goodbye")
