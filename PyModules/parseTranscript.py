@@ -1,7 +1,6 @@
 from time import sleep
 import serial, os, signal
 import handleTrigger as HT
-import getJoke as joke
 import APICalls
 import tts
 import subprocess
@@ -13,8 +12,15 @@ ding = "/home/pi/Anton/Sounds/ding.wav"
 
 todayWeatherArrays = [["todays", "weather"], ["today", "weather"], ["today's", "weather"], ["the weather in"]]
 tomWeatherArrays = [["tomorrow", "weather"], ["tomorrows", "weather"], ["tomorrow's", "weather"]]
-commandArray = ["light", "joke", "weather", "alarm", "play", "next", "pause", "volume", "skip", "feed", "beer", "exit", "scout"]
+commandArray = ["light", "joke", "weather", "alarm", "play", "next", 
+                "pause", "volume", "skip", "feed", "beer", "exit", "scout"]
 weatherDayArray = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "today", "tomorrow"]
+questionArray = ["who", "whose", "who's", "whos", 
+                 "what", "what's", "whats", 
+                 "when", "when's", "whens", 
+                 "where", "where's", "wheres", 
+                 "why", "why's", "whys",
+                 "how", "how's", "hows"]
 
 def playSound(file):
 	os.system("mpg123 " + directory + file + ".mp3")
@@ -37,7 +43,7 @@ def parse(transcript):
 
     elif "joke" in transcript:
         playDingDelay()
-        joke.play()
+        APICalls.getJoke()
 
     elif "weather" in transcript:
         playDingDelay()
@@ -181,6 +187,9 @@ def parse(transcript):
     elif "beer" in transcript:
         playDing()
         wifiDevices.beerMe()
+
+    elif any(x in transcript for x in questionArray):
+        APICalls.askQuestion(transcript)
 
     elif "exit" in transcript:
         playDing()
