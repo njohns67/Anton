@@ -1,4 +1,5 @@
 import sys
+from threading import Thread
 sys.path.append("/home/pi/Anton/Py3Snowboy/snowboy/examples/Python3")
 sys.path.append("/home/pi/Anton/PyModules")
 import snowboydecoder
@@ -19,8 +20,9 @@ def signal_handler(signal, frame):
     for x in cfg.processes:
         x.send_signal(signal)
         x.wait()
+    handleTrigger.isDead = 1
+    handleTrigger.isRecording = 1
     os.system("stty sane")
-
 
 def interrupt_callback():
     global interrupted
@@ -31,14 +33,15 @@ if len(sys.argv) == 1:
     print("Usage: python demo.py your.model")
     sys.exit(-1)
 
-model = sys.argv[1]
-
+model = sys.argv[1:]
+sensitivity = [.33, .3]
 # capture SIGINT signal, e.g., Ctrl+C
 signal.signal(signal.SIGINT, signal_handler)
-
-detector = snowboydecoder.HotwordDetector(model, sensitivity=.5)
+thread = Thread(target=handleTrigger.getAverageRMS)
+thread.daemon = True
+thread.start()
+detector = snowboydecoder.HotwordDetector(model, sensitivity=sensitivity)
 print('Listening... Press Ctrl+C to exit')
-
 # main loop
 detector.start(detected_callback=handleTrigger.main,
                interrupt_check=interrupt_callback,

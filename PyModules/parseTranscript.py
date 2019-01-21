@@ -1,5 +1,5 @@
 from time import sleep
-import serial, os
+import serial, os, signal
 import handleTrigger as HT
 import getJoke as joke
 import APICalls
@@ -9,44 +9,56 @@ import wifiDevices
 import cfg
 
 directory = "/home/pi/Anton/Responses/"
+ding = "/home/pi/Anton/Sounds/ding.wav"
+
 todayWeatherArrays = [["todays", "weather"], ["today", "weather"], ["today's", "weather"], ["the weather in"]]
 tomWeatherArrays = [["tomorrow", "weather"], ["tomorrows", "weather"], ["tomorrow's", "weather"]]
+commandArray = ["light", "joke", "weather", "alarm", "play", "next", "pause", "volume", "skip", "feed", "beer", "exit", "scout"]
+weatherDayArray = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "today", "tomorrow"]
 
 def playSound(file):
 	os.system("mpg123 " + directory + file + ".mp3")
 
+def playDingDelay():
+        p = subprocess.Popen(["play", ding])
+        cfg.processes.append(p)
+
+def playDing():
+    os.system("play " + ding)
+
 def parse(transcript):
     transcript = transcript.lower()
+    print(transcript)
+    if not any(x in transcript for x in commandArray):
+        return -1
     if "light" in transcript and "on" in transcript:
+        playDing()
         wifiDevices.lightOn()
 
     elif "joke" in transcript:
+        playDingDelay()
         joke.play()
 
     elif "weather" in transcript:
-        test = 0
+        playDingDelay()
         city = ""
         transcript2 = transcript.split()
+        day = ""
         try:
             index = transcript2.index("in")
             city = transcript2[index+1]
         except ValueError:
             city = ""
-        for x in todayWeatherArrays:
-            if all(y in transcript for y in x):
-                test = 1
-                break
-        if test == 1 and not any(x in transcript for x in ["tomorrow", "tomorrows", "tomorrow's"]):
-            APICalls.getTodaysForecast(city)
+        both = set(weatherDayArray).intersection(transcript2)
+        if len(both) == 0:
+            day = "today"
         else:
-            for x in tomWeatherArrays:
-                if all(y in transcript for y in x):
-                    test = 2
-                    break
-        if test == 2:
-            APICalls.getTomForecast(city)
+            index = [weatherDayArray.index(x) for x in both]
+            day = weatherDayArray[index[len(index)-1]]
+        APICalls.getForecast(city, day)
 
     elif "alarm" in transcript or "timer" in transcript:
+        playDingDelay()
         if not any(x in transcript for x in ["minutes", "seconds", "hours", "minute", "hour"]):
             playSound("BadTimer")
             return
@@ -86,31 +98,37 @@ def parse(transcript):
             playSound("BadRec")
         tts.text2speech("I've set your timer for" + playString)
 
-    elif "play" in transcript:
+    elif "play" in transcript or "pray" in transcript:
+        HT.isPlaying = 1
+        playDing()
+        transcript2 = transcript
         transcript = transcript.split()
-        if len(transcript) < 3:
-            os.system("mpc play")
-            return
+        if (len(transcript) < 4 and "continue" in transcript) or "play the music" == transcript2 or "continue playing" in transcript2 or "play" == transcript2:
+            print("resuming")
+            return 3
         index = transcript.index("play")
         index2 = 0
         try:
             index2 = transcript.index("by")
         except ValueError:
             song = ""
-            if "next" in transcript:
+            if "next" in transcript or "after this" in transcript2:
                 for x in range(index+1, len(transcript)-1):
                     song += transcript[x]
                     song += " "
                 os.system("mpc search title \"" + song + "\" | head -n 1 | mpc add")
+                tts.text2speech("Added " + song + " to the queue")
+                return 3
             else:
                 for x in range(index+1, len(transcript)):
                     song += transcript[x]
                     song += " "
-                os.system("mpc clear; mpc search title \"" + song + "\" | head -n 1 | mpc add; mpc play")
-                return
+                os.system("mpc clear; mpc search title \"" + song + "\" | head -n 1 | mpc add")
+                tts.text2speech("Playing " + song)
+                return 3
         song = ""
         artist = ""
-        if "next" in transcript:
+        if "next" in transcript or "after this" in transcript2:
             for x in range(index+1, index2):
                 song += transcript[x]
                 song += " "
@@ -119,7 +137,9 @@ def parse(transcript):
                 artist += " "
             print(song)
             print(artist)
-            os.system("mpc search title \"" + song + "\" artist \"" + artist + "\" | head -n 1 | mpc add;")
+            os.system("mpc search title \"" + song + "\" artist \"" + artist + "\" | head -n 1 | mpc add")
+            tts.text2speech("Added " + song + " by " + artist + " to the queue")
+            return 3
         else:
             for x in range(index+1, index2):
                 song += transcript[x]
@@ -129,14 +149,18 @@ def parse(transcript):
                 artist += " "
             print(song)
             print(artist)
-            os.system("mpc clear; mpc search title \"" + song + "\" artist \"" + artist + "\" | head -n 1 | mpc add; mpc play")
+            os.system("mpc clear; mpc search title \"" + song + "\" artist \"" + artist + "\" | head -n 1 | mpc add")
+            tts.text2speech("Playing " + song + " by " + artist)
+            return 3
 
     elif "pause" in transcript or ("stop" in transcript and "music" in transcript):
-        HT.testPlaying = 0
-        print("Pausing")
-        os.system("mpc pause")
+        playDing()
+        HT.isPlaying = 0
+        print("Pausing music")
+        return 2
 
     elif "volume" in transcript:
+        playDing()
         if "up" in transcript:
             os.system("amixer set Master 10%+")
         elif "down" in transcript:
@@ -146,20 +170,28 @@ def parse(transcript):
             return
 
     elif "skip" in transcript:
+        playDing()
         os.system("mpc next")
 
     elif "feed" in transcript or "scout" in transcript:
+        playDing()
         playSound("FeedingScout")
         wifiDevices.feedScout()
 
     elif "beer" in transcript:
+        playDing()
         wifiDevices.beerMe()
 
     elif "exit" in transcript:
+        playDing()
         playSound("Goodbye")
+        for x in cfg.processes:
+            x.send_signal(signal.SIGINT)
+            x.wait()
+        os.system("stty sane")
         exit(0)
 
     else:
         print("I didn't quite get that. Please try again.")
-        playSound("BadRec")
+        return -1
     
