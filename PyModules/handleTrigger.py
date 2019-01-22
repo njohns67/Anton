@@ -3,108 +3,69 @@ import speech_recognition as sr
 import traceback
 import subprocess, signal
 import sys, os, time
-import parseTranscript as pT
 import wave, pyaudio
 import audioop
-import cfg
 from threading import Thread
 from pixel_ring import pixel_ring as pr
 from gpiozero import LED
 import tts
 
-power = LED(5)
-power.on()
-pr.set_brightness(100)
-isDead = 0
-isRecording = 0
-testPlaying = 0
-isPlaying = 0
 
 client = speech.SpeechClient()
-length = 8
-samplerate = 48000
-channels = 1
-width = 2
-chunk = 1024
 filename = "temp.wav"
-dong = "/home/pi/Anton/Sounds/dong.wav"
-ding = "/home/pi/Anton/Sounds/ding.wav"
-rmsMin = 50000000
 
-def lightOn():
-    pr.set_color_delay(r=0, g=0, b=255, delay=.02)
-
-def lightSuccess():
-    pr.set_color(r=0, g=255, b=0)
-
-def lightFail():
-    pr.set_color(r=255, g=0, b=0)
-    time.sleep(1)
-    lightOff()
-
-def lightOff():
-    pr.turn_off_color_delay(delay=.02)
-
-def getAverageRMS():
+def getAverageRMS(self):
     time.sleep(5)
-    global isDead
     p = pyaudio.PyAudio()
-    stream = p.open(rate=samplerate, format=p.get_format_from_width(width), 
-                    channels=channels, input=True, start=False)
+    stream = p.open(rate=self.recordingInfo["samplerate"], 
+                    format=p.get_format_from_width(self.recordingInfo["width"]), 
+                    channels=self.recordingInfo["channels"], input=True, start=False)
     stream.start_stream()
     rmsData = []
     averageRms = 0
-    while isDead != 1:
-        global isRecording
-        global isPlaying
-        while isRecording != 1:
-            if isPlaying:
+    while self.isDead != 1:
+        while self.isRecording != 1:
+            if self.isPlaying:
                 break
-            global rmsMin
-            data = stream.read(chunk)
+            data = stream.read(self.recordingInfo["chunk"])
             rms = audioop.rms(data, 4)
             rmsData.append(rms)
             if len(rmsData) > 100:
                 averageRms = int(sum(rmsData)/len(rmsData))
-                rmsMin = int(averageRms * 1.3)
+                self.recordingInfo["minRMS"] = int(averageRms * 1.3)
             if len(rmsData) > 1000:
                 rmsData = []
-        if isRecording:
+        if self.isRecording:
             print("Recording")
-            print("rms min calculated at ", rmsMin)
+            print("rms min calculated at ", self.recordingInfo["minRMS"])
             time.sleep(10)
     stream.stop_stream()
     stream.close()
     p.terminate()
     print("Exiting thread")
 
-def record():
-    global testPlaying
-    global isRecording
-    isRecording = 1
-    print(str(testPlaying))
-    if testPlaying:
+def record(self):
+    if self.isPlaying:
         os.system("mpc pause")
         print("Pausing music")
-    proc = subprocess.Popen(["play", dong])
-    cfg.processes.append(proc)
-    thread = Thread(target=lightOn)
-    thread.start()
+    proc = subprocess.Popen(["play", self.filePaths["dong"]])
+    self.lightOn()
+    self.processes.append(proc)
     p = pyaudio.PyAudio()
-    stream = p.open(rate=samplerate, format=p.get_format_from_width(width), 
-                    channels=channels, input=True, start=False)
+    stream = p.open(rate=self.recordingInfo["samplerate"], format=p.get_format_from_width(self.recordingInfo["width"]), 
+                    channels=self.recordingInfo["channels"], input=True, start=False)
     stream.start_stream()
     frames = []
     min = sys.maxsize
     max = 0
     num = sys.maxsize
     isSet = 0
-    maxi = int(samplerate/chunk*length)
-    oneSecond = maxi/length
-    print("rmsMin is ", str(rmsMin))
+    maxi = int(self.recordingInfo["samplerate"]/self.recordingInfo["chunk"]*self.recordingInfo["length"])
+    oneSecond = maxi/self.recordingInfo["length"]
+    print("rmsMin is ", str(self.recordingInfo["minRMS"]))
     rmsData = []
-    for i in range(0, int(samplerate/chunk*length)):
-        data = stream.read(chunk)
+    for i in range(0, int(self.recordingInfo["samplerate"]/self.recordingInfo["chunk"]*self.recordingInfo["length"])):
+        data = stream.read(self.recordingInfo["chunk"])
         frames.append(data)
         rms = audioop.rms(data, 4)
         rmsData.append(rms)
@@ -112,12 +73,12 @@ def record():
             min = rms
         if rms > max: 
             max = rms
-        if i > oneSecond * 2.5 and rms < rmsMin and isSet == 0:
+        if i > oneSecond * 2.5 and rms < self.recordingInfo["minRMS"] and isSet == 0:
             num = i + (oneSecond * (2/3))
             isSet = 1
-        if i > num and rms < rmsMin and isSet == 1:
+        if i > num and rms < self.recordingInfo["minRMS"] and isSet == 1:
             break
-        elif i > num and rms > rmsMin and isSet == 1:
+        elif i > num and rms > self.recordingInfo["minRMS"] and isSet == 1:
             isSet = 0
     rmsAvg = sum(rmsData)/len(rmsData)
     print("\n\nMax is: ", max, "\nMin is ", min, "\nAverage is ", rmsAvg)
@@ -125,38 +86,33 @@ def record():
     stream.close()
     p.terminate()
     w = wave.open(filename, "wb")
-    w.setnchannels(channels)
-    w.setsampwidth(p.get_sample_size(p.get_format_from_width(width)))
-    w.setframerate(samplerate)
+    w.setnchannels(self.recordingInfo["channels"])
+    w.setsampwidth(p.get_sample_size(p.get_format_from_width(self.recordingInfo["width"])))
+    w.setframerate(self.recordingInfo["samplerate"])
     w.writeframes(b''.join(frames))
     w.close()
     transcript = processAudio()
     if transcript == 1:
+        self.lightFail()
         tts.play("/home/pi/Anton/Responses/GoodTalk")
-        thread = Thread(target=lightOff)
-        thread.start()
-        isRecording = 0
-        if testPlaying == 1:
+        self.isRecording = 0
+        if self.isPlaying == 1:
             os.system("mpc play")
             print("Playing")
+        self.lightOff()
         return
-    thread = Thread(target=lightSuccess)
-    thread.start()
-    test = pT.parse(transcript)
+    test = self.parseTranscript(transcript)
     if test == -1:
-        thread = Thread(target=lightFail())
-        thread.start()
+        self.badTranscript = 1
     elif test == 2:         #Music should stay paused
-        testPlaying = 0
+        self.isPlaying = 0
     elif test == 3:         #Music needs to be played
-        testPlaying = 1
-    thread = Thread(target=lightOff)
-    thread.start()
-    print(testPlaying)
-    if testPlaying == 1:
+        self.isPlaying = 1
+    if self.isPlaying == 1:
         os.system("mpc play")
         print("Playing")
-    isRecording = 0
+    self.lightOff()
+    self.isRecording = 0
 
 def processAudio():
     reg = sr.Recognizer()
@@ -171,14 +127,13 @@ def processAudio():
         return 1
 
 def processAudioGoogle():
-    global testPlaying
-    proc = subprocess.Popen(["play", ding])
-    cfg.processes.append(proc)
+    proc = subprocess.Popen(["play", self.filePaths["ding"]])
+    self.processes.append(proc)
     with open(filename, "rb") as file:
         content = file.read()
     audio = speech.types.RecognitionAudio(content=content)
     config = speech.types.RecognitionConfig(encoding=speech.enums.RecognitionConfig.AudioEncoding.LINEAR16,
-            sample_rate_hertz=samplerate,
+            sample_rate_hertz=self.recordingInfo["samplerate"],
             language_code="en-US",
             audio_channel_count=4,
             enable_separate_recognition_per_channel=False)
@@ -190,18 +145,22 @@ def processAudioGoogle():
         print(e)
         return 1
 
-def main():
+def main(self):
     try:
-        record()
-        time.sleep(1)
+        record(self)
+        self.isRecording = 0
+        self.changeLight = 1
+        self.isParsed = 0
+        self.badTranscript = 0
     except Exception as e:
         excType, excObj, excTb = sys.exc_info()
         fname = os.path.split(excTb.tb_frame.f_code.co_filename)[1]
         print(excType, fname, excTb.tb_lineno)
         traceback.print_exc()
         print(e)
-        lightOff()
-        for x in cfg.processes:
+        self.changeLight = 1
+        self.lightOff()
+        for x in self.processes:
             x.send_signal(signal.SIGINT)
             x.wait()
 

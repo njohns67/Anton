@@ -5,9 +5,9 @@ sys.path.append("/home/pi/Anton/PyModules")
 import snowboydecoder
 import signal
 import os
-import handleTrigger
-import cfg
+from Anton import Anton
 
+anton = Anton()
 interrupted = False
 
 def trigger():
@@ -17,11 +17,11 @@ def trigger():
 def signal_handler(signal, frame):
     global interrupted
     interrupted = True
-    for x in cfg.processes:
+    for x in anton.processes:
         x.send_signal(signal)
         x.wait()
-    handleTrigger.isDead = 1
-    handleTrigger.isRecording = 1
+    anton.isDead = 1
+    anton.isRecording = 1
     os.system("stty sane")
 
 def interrupt_callback():
@@ -34,16 +34,13 @@ if len(sys.argv) == 1:
     sys.exit(-1)
 
 model = sys.argv[1:]
-sensitivity = [.33, .3]
+sensitivity = [.33, .35]
 # capture SIGINT signal, e.g., Ctrl+C
 signal.signal(signal.SIGINT, signal_handler)
-thread = Thread(target=handleTrigger.getAverageRMS)
-thread.daemon = True
-thread.start()
 detector = snowboydecoder.HotwordDetector(model, sensitivity=sensitivity)
 print('Listening... Press Ctrl+C to exit')
 # main loop
-detector.start(detected_callback=handleTrigger.main,
+detector.start(detected_callback=anton.record,
                interrupt_check=interrupt_callback,
                sleep_time=0.03)
 

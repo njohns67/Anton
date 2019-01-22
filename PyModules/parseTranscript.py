@@ -1,14 +1,8 @@
 from time import sleep
 import serial, os, signal
-import handleTrigger as HT
-import APICalls
-import tts
 import subprocess
-import wifiDevices
-import cfg
 
 directory = "/home/pi/Anton/Responses/"
-ding = "/home/pi/Anton/Sounds/ding.wav"
 
 todayWeatherArrays = [["todays", "weather"], ["today", "weather"], ["today's", "weather"], ["the weather in"]]
 tomWeatherArrays = [["tomorrow", "weather"], ["tomorrows", "weather"], ["tomorrow's", "weather"]]
@@ -25,28 +19,22 @@ questionArray = ["who", "whose", "who's", "whos",
 def playSound(file):
 	os.system("mpg123 " + directory + file + ".mp3")
 
-def playDingDelay():
-        p = subprocess.Popen(["play", ding])
-        cfg.processes.append(p)
+def playDingDelay(self):
+        p = subprocess.Popen(["play", self.filePaths["ding"]])
+        self.processes.append(p)
 
-def playDing():
-    os.system("play " + ding)
+def playDing(self):
+    os.system("play " + self.filePaths["ding"])
 
-def parse(transcript):
+def parse(self, transcript):
     transcript = transcript.lower()
     print(transcript)
-    if not any(x in transcript for x in commandArray):
-        return -1
-    if "light" in transcript and "on" in transcript:
-        playDing()
-        wifiDevices.lightOn()
-
-    elif "joke" in transcript:
-        playDingDelay()
-        APICalls.getJoke()
+    if "joke" in transcript:
+        playDingDelay(self)
+        self.getJoke()
 
     elif "weather" in transcript:
-        playDingDelay()
+        playDingDelay(self)
         city = ""
         transcript2 = transcript.split()
         day = ""
@@ -61,10 +49,10 @@ def parse(transcript):
         else:
             index = [weatherDayArray.index(x) for x in both]
             day = weatherDayArray[index[len(index)-1]]
-        APICalls.getForecast(city, day)
+        self.getForecast(city, day)
 
     elif "alarm" in transcript or "timer" in transcript:
-        playDingDelay()
+        playDingDelay(self)
         if not any(x in transcript for x in ["minutes", "seconds", "hours", "minute", "hour"]):
             playSound("BadTimer")
             return
@@ -95,18 +83,18 @@ def parse(transcript):
         try:
             if len(nums) == 1:
                 p = subprocess.Popen(["/home/pi/Anton/Resources/timer", str(nums[0]), letters[0]])
-                cfg.processes.append(p)
+                self.processes.append(p)
             else:
                 p = subprocess.Popen(["/home/pi/Anton/Resources/timer", str(nums[0]), letters[0], str(nums[1]), letters[1]])
-                cfg.processes.append(p)
+                self.processes.append(p)
         except Exception as e:
             print(e)
             playSound("BadRec")
-        tts.text2speech("I've set your timer for" + playString)
+        self.textToSpeech("I've set your timer for" + playString)
 
     elif "play" in transcript or "pray" in transcript:
-        HT.isPlaying = 1
-        playDing()
+        self.isPlaying = 1
+        playDing(self)
         transcript2 = transcript
         transcript = transcript.split()
         if (len(transcript) < 4 and "continue" in transcript) or "play the music" == transcript2 or "continue playing" in transcript2 or "play" == transcript2:
@@ -123,14 +111,14 @@ def parse(transcript):
                     song += transcript[x]
                     song += " "
                 os.system("mpc search title \"" + song + "\" | head -n 1 | mpc add")
-                tts.text2speech("Added " + song + " to the queue")
+                self.textToSpeech("Added " + song + " to the queue")
                 return 3
             else:
                 for x in range(index+1, len(transcript)):
                     song += transcript[x]
                     song += " "
                 os.system("mpc clear; mpc search title \"" + song + "\" | head -n 1 | mpc add")
-                tts.text2speech("Playing " + song)
+                self.textToSpeech("Playing " + song)
                 return 3
         song = ""
         artist = ""
@@ -144,7 +132,7 @@ def parse(transcript):
             print(song)
             print(artist)
             os.system("mpc search title \"" + song + "\" artist \"" + artist + "\" | head -n 1 | mpc add")
-            tts.text2speech("Added " + song + " by " + artist + " to the queue")
+            self.textToSpeech("Added " + song + " by " + artist + " to the queue")
             return 3
         else:
             for x in range(index+1, index2):
@@ -156,17 +144,17 @@ def parse(transcript):
             print(song)
             print(artist)
             os.system("mpc clear; mpc search title \"" + song + "\" artist \"" + artist + "\" | head -n 1 | mpc add")
-            tts.text2speech("Playing " + song + " by " + artist)
+            self.textToSpeech("Playing " + song + " by " + artist)
             return 3
 
     elif "pause" in transcript or ("stop" in transcript and "music" in transcript):
-        playDing()
-        HT.isPlaying = 0
+        playDing(self)
+        self.isPlaying = 0
         print("Pausing music")
         return 2
 
     elif "volume" in transcript:
-        playDing()
+        playDing(self)
         if "up" in transcript:
             os.system("amixer set Master 10%+")
         elif "down" in transcript:
@@ -176,25 +164,26 @@ def parse(transcript):
             return
 
     elif "skip" in transcript:
-        playDing()
+        playDing(self)
         os.system("mpc next")
 
     elif "feed" in transcript or "scout" in transcript:
-        playDing()
+        playDing(self)
         playSound("FeedingScout")
-        wifiDevices.feedScout()
+        self.feedScout()
 
     elif "beer" in transcript:
-        playDing()
-        wifiDevices.beerMe()
+        playDing(self)
+        self.beerMe()
 
     elif any(x in transcript for x in questionArray):
-        APICalls.askQuestion(transcript)
+        playDingDelay(self)
+        self.askQuestion(transcript)
 
     elif "exit" in transcript:
-        playDing()
+        playDing(self)
         playSound("Goodbye")
-        for x in cfg.processes:
+        for x in self.processes:
             x.send_signal(signal.SIGINT)
             x.wait()
         os.system("stty sane")
