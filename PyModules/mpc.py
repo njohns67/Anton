@@ -1,0 +1,71 @@
+import subprocess, os
+class MPC:
+    def __init__(self):
+        self.isPlaying = 0
+        self.isRunning = 0
+
+    def findSong(self, song, artist=""):
+        search = subprocess.check_output(["mpc", "search", "title", song, "artist", artist]).decode()
+        search = search.split("\n")
+        if len(search) < 1:
+            return -1
+        return search[0]
+
+    def addSong(self, songID):
+        subprocess.check_output(["mpc", "add", songID])
+
+    def playSong(self, song, artist=""):
+        subprocess.check_output(["mpc", "clear"])
+        song = self.findSong(song, artist)
+        if song == -1:
+            return -1
+        self.addSong(song)
+        play = subprocess.check_output(["mpc", "play"]).decode()
+        subprocess.check_output(["mpc", "pause"])
+        play = play.split("\n")
+        play = play[0].split()
+        try:
+            Index = play.index("-")
+        except:
+            play = subprocess.check_output(["mpc", "play"]).decode()
+            subprocess.check_output(["mpc", "pause"])
+            play = play.split("\n")
+            play = play[0].split()
+        p = subprocess.Popen(["mpc", "seek", "0"])
+        p.wait()
+        Index = play.index("-")
+        artist = " ".join(play[:Index])
+        song = " ".join(play[Index+1:])
+        print(song)
+        print(artist)
+        return [song, artist]
+
+    def play(self):
+        try:
+            out = subprocess.check_output(["mpc", "play"])
+            out = out.split("\n")
+            out.index("-")
+            self.isPlaying = 1
+        except:
+            return -1
+
+    def pause(self):
+        subprocess.Popen(["mpc", "pause"])
+        self.isPlaying = 0
+
+    def skip(self):
+        subprocess.Popen(["mpc", "next"])
+
+    def prev(self):
+        subprocess.Popen(["mpc", "prev"])
+
+    def queueSong(self, song, artist=""):
+        songID = self.findSong(song, artist)
+        if songID == -1:
+            return -1
+        self.addSong(songID)
+
+
+
+mpc = MPC()
+mpc.playSong("when it rains it pours")

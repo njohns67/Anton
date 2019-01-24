@@ -8,7 +8,6 @@ import audioop
 from threading import Thread
 from pixel_ring import pixel_ring as pr
 from gpiozero import LED
-import tts
 
 
 client = speech.SpeechClient()
@@ -44,11 +43,11 @@ def getAverageRMS(self):
     p.terminate()
     print("Exiting thread")
 
-def record(self):
+def record(self, retTranscript=0):
     if self.isPlaying:
-        os.system("mpc pause")
+        self.mpc.pause()
         print("Pausing music")
-    proc = subprocess.Popen(["play", self.filePaths["dong"]])
+    proc = subprocess.Popen(["play", self.filePaths["dong"]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     self.lightOn()
     self.processes.append(proc)
     p = pyaudio.PyAudio()
@@ -94,25 +93,26 @@ def record(self):
     transcript = processAudio()
     if transcript == 1:
         self.lightFail()
-        tts.play("/home/pi/Anton/Responses/GoodTalk")
+        #self.play("/home/pi/Anton/Responses/GoodTalk")
         self.isRecording = 0
         if self.isPlaying == 1:
-            os.system("mpc play")
+            self.mpc.play()
             print("Playing")
         self.lightOff()
         return
+    if retTranscript:
+        return transcript
     test = self.parseTranscript(transcript)
     if test == -1:
-        self.badTranscript = 1
+        return
     elif test == 2:         #Music should stay paused
         self.isPlaying = 0
     elif test == 3:         #Music needs to be played
         self.isPlaying = 1
     if self.isPlaying == 1:
-        os.system("mpc play")
+        self.mpc.play()
         print("Playing")
     self.lightOff()
-    self.isRecording = 0
 
 def processAudio():
     reg = sr.Recognizer()
@@ -145,20 +145,21 @@ def processAudioGoogle():
         print(e)
         return 1
 
-def main(self):
+def main(self, retTranscript=0):
     try:
-        record(self)
+        test = record(self, retTranscript)
         self.isRecording = 0
-        self.changeLight = 1
-        self.isParsed = 0
-        self.badTranscript = 0
+        if retTranscript:
+            return test
+        else:
+            return 0
     except Exception as e:
+        self.isRecording = 0
         excType, excObj, excTb = sys.exc_info()
         fname = os.path.split(excTb.tb_frame.f_code.co_filename)[1]
         print(excType, fname, excTb.tb_lineno)
         traceback.print_exc()
         print(e)
-        self.changeLight = 1
         self.lightOff()
         for x in self.processes:
             x.send_signal(signal.SIGINT)
