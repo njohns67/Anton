@@ -1,8 +1,9 @@
 import subprocess, os
 class MPC:
-    def __init__(self):
+    def __init__(self, anton):
         self.isPlaying = 0
         self.isRunning = 0
+        self.anton = anton
 
     def findSong(self, song, artist=""):
         search = subprocess.check_output(["mpc", "search", "title", song, "artist", artist]).decode()
@@ -38,7 +39,9 @@ class MPC:
         song = " ".join(play[Index+1:])
         print(song)
         print(artist)
-        return [song, artist]
+        self.anton.isPlaying = self.anton.mpc
+        self.anton.continuePlaying = 1
+        self.anton.tts("Playing " + song + " by " + artist)
 
     def play(self):
         try:
@@ -46,6 +49,8 @@ class MPC:
             out = out.split("\n")
             out.index("-")
             self.isPlaying = 1
+            self.anton.isPlaying = self.anton.mpc
+            self.anton.continuePlaying = 1
         except:
             return -1
 
@@ -66,6 +71,3 @@ class MPC:
         self.addSong(songID)
 
 
-
-mpc = MPC()
-mpc.playSong("when it rains it pours")

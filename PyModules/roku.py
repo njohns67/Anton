@@ -83,5 +83,19 @@ class Roku:
         time.sleep(23)
         self.pressKey("select")
 
-    def togglePlay(self):
+    def play(self):
+        self.anton.continuePlaying = 1
         self.pressKey("play")
+
+    def pause(self):
+        self.pressKey("play")
+
+    def continueHulu(self):
+        if not self.isOn:
+            self.power()
+            time.sleep(15)
+        self.launchApp("hulu")
+        time.sleep(12)
+        self.pressKey("right")
+        self.pressKey("down")
+        self.pressKey("select")

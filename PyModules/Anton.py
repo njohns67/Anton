@@ -10,22 +10,26 @@ import wifiDevices
 import time
 from roku import Roku
 from mpc import MPC
+from pandora import Pandora
 
 class Anton:
-    def __init__(self, isRecording=0, isPlaying=0, debug=0, verbose=0):
+    def __init__(self, debug=0, verbose=0):
         self.power = LED(5)
         self.power.on()
-        self.roku = Roku("192.168.1.75")
-        self.mpc = MPC()
+        self.roku = Roku(self, "192.168.1.75")
+        self.mpc = MPC(self)
+        self.pandora = Pandora(self)
         pr.set_brightness(100)
-        self.isRecording = isRecording
-        self.isPlaying = isPlaying
+        self.isRecording = 0
+        self.isPlaying = None
+        self.continuePlaying = 0
         self.isDead = 0
         self.debug = debug
         self.verbose = verbose
         self.processes = []
         self.isMuted = 0
         self.bellsOff = 0
+        self.isResponding = 0
         self.recordingInfo = {"minRMS": 10000000, "length": 8, "samplerate": 48000,
                               "channels": 1, "width": 2, "chunk": 1024, "tempFileName": "temp.wav"}
         self.filePaths = {"dong": "/home/pi/Anton/Sounds/dong.wav", "ding": "/home/pi/Anton/Sounds/ding.wav"}
@@ -46,15 +50,9 @@ class Anton:
             return pT.parse(self, transcript)
         else:
             test = pT.parse(self, transcript)
-            if test == -1:
-                print("Bad transcript")
-            elif test == 2:         #Music should stay paused
-                self.isPlaying = 0
-            elif test == 3:         #Music needs to be played
-                self.isPlaying = 1
-            if self.isPlaying == 1:
-                os.system("mpc play")
-                print("Playing")
+            if self.continuePlaying:
+                self.isPlaying.play()
+            return test
 
     def getForecast(self, city="Menomonee Falls", day="today"):
         APICalls.getForecast(self, city, day)
@@ -63,12 +61,21 @@ class Anton:
         return APICalls.askQuestion(self, question)
 
     def record(self):
-        test = hT.main(self)
-        if test != 0:
-            if any(x in test for x in ["yes", "yeah", "sure", "affirmative", "go ahead", "go for it"]):
+        if self.isPlaying != None:
+            self.isPlaying.pause()
+            self.continuePlaying = 0
+        transcript = hT.main(self)
+        self.isRecording = 0
+        test = self.parseTranscript(transcript)
+        if self.isResponding:
+            if any(x in test for x in ["yes", "yeah", "sure", "affirmative", "go"]):
                 return 1
             else:
                 return 0
+        if test == -1:
+            print("Something went wrong")
+            pass       #Idk maybe do something with this later it's currently handled in parseTranscript()
+        self.lightOff()
 
     def feedScout(self):
         wifiDevices.feedScout()

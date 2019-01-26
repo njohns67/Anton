@@ -31,6 +31,7 @@ def playDing(self):
 
 def parse(self, transcript):
     transcript = transcript.lower()
+    splitTranscript = transcript.split()
     print(transcript)
     if "joke" in transcript:
         playDingDelay(self)
@@ -39,9 +40,9 @@ def parse(self, transcript):
     elif "weather" in transcript:
         playDingDelay(self)
         city = ""
-        transcript2 = transcript.split()
+        splitTranscript = transcript.split()
         day = ""
-        both = set(weatherDayArray).intersection(transcript2)
+        both = set(weatherDayArray).intersection(splitTranscript)
         if len(both) == 0:
             day = "today"
         else:
@@ -50,17 +51,17 @@ def parse(self, transcript):
         print(day)
         try:
             if len(both) == 0:
-                index = transcript2.index("in")
-                city = transcript2[index+1:]
+                index = splitTranscript.index("in")
+                city = splitTranscript[index+1:]
                 city = " ".join(city)
             else:
-                dayIndex = transcript2.index(day)
-                index = transcript2.index("in")
-                if dayIndex == len(transcript2)-1:
-                    city = transcript2[index+1:dayIndex]
+                dayIndex = splitTranscript.index(day)
+                index = splitTranscript.index("in")
+                if dayIndex == len(splitTranscript)-1:
+                    city = splitTranscript[index+1:dayIndex]
                     city = " ".join(city)
                 else:
-                    city = transcript2[index+1:]
+                    city = splitTranscript[index+1:]
                     city = " ".join(city)
         except ValueError:
             city = ""
@@ -73,12 +74,12 @@ def parse(self, transcript):
             self.play("BadTimer")
             return
         a, playString = transcript.split("for")
-        transcript2 = transcript.split()
+        splitTranscript = transcript.split()
         nums = []
         indices = []
         letters = []
         i = 0
-        for x in transcript2:
+        for x in splitTranscript:
             i += 1
             try:
                nums.append(int(x))
@@ -89,7 +90,7 @@ def parse(self, transcript):
             self.play("BadRec")
             return
         for x in indices:
-            letters.append(transcript2[x][0])
+            letters.append(splitTranscript[x][0])
         if "and a half" in transcript or "1/2" in transcript:
             nums.append(30)
             if letters[0] == 'm':
@@ -109,19 +110,20 @@ def parse(self, transcript):
         self.tts("I've set your timer for" + playString)
 
     elif "play" in transcript or "pray" in transcript or "playing" in transcript:
+        if (len(splitTranscript) < 4 and "continue" in transcript) or "play the music" == transcript or "continue playing" in transcript or "play" == transcript:
+            print("resuming")
         if any(x in transcript for x in ["netflix", "hulu", "amazon", "prime"]):
             playDing(self)
             if "on" not in transcript:
                 self.playSound("BadRoku")
                 return
-            splitTranscript = transcript.split()
             Index = splitTranscript.index("play")
             onIndex = splitTranscript.index("on")
             show = splitTranscript[Index+1:onIndex]
             channel = splitTranscript[onIndex+1:]
             show = " ".join(show)
             channel = " ".join(channel)
-            if "season" in splitTranscript:
+            if "season" in transcript:
                 Index = splitTranscript.index("season")
                 season = splitTranscript[Index+1]
                 try:
@@ -140,88 +142,91 @@ def parse(self, transcript):
             playDing(self)
             self.roku.togglePlay()
             return
-        self.isPlaying = 1
-        playDing(self)
-        transcript2 = transcript
-        transcript = transcript.split()
-        if (len(transcript) < 4 and "continue" in transcript) or "play the music" == transcript2 or "continue playing" in transcript2 or "play" == transcript2:
-            print("resuming")
-            return 3
-        index = transcript.index("play")
-        index2 = 0
-        try:
-            index2 = transcript.index("by")
-        except ValueError:
+        elif "pandora" in transcript or "radio" in transcript:
+            playDing(self)
+            if "radio" in transcript:
+                Index = splitTranscript.index("radio") + 1
+            else:
+                Index = splitTranscript.index("pandora")
+                if splitTranscript[Index-1] == "on":
+                    Index -= 1
+            playIndex = splitTranscript.index("play")
+            station = splitTranscript[playIndex+1:Index]
+            station = " ".join(station)
+            self.pandora.changeStation(station)
+            print(station)
+            return 0
+        else:
+            playDing(self)
+            transcript = transcript
+            splitTranscript = transcript.split()
+            index = splitTranscript.index("play")
+            index2 = 0
+            try:
+                index2 = splitTranscript.index("by")
+            except ValueError:
+                song = ""
+                if "next" in transcript or "after this" in transcript:
+                    for x in range(index+1, len(splitTranscript)-1):
+                        song += splitTranscript[x]
+                        song += " "
+                    songInfo = self.mpc.queueSong(song)
+                    if songInfo == -1:
+                        self.playSound("BadSong")
+                        return -1
+                    return
+                else:
+                    for x in range(index+1, len(splitTranscript)):
+                        song += splitTranscript[x]
+                        song += " "
+                    songInfo = self.mpc.playSong(song)
+                    if songInfo == -1:
+                        self.playSound("BadSong")
+                        return -1
+                    return
             song = ""
-            if "next" in transcript or "after this" in transcript2:
-                for x in range(index+1, len(transcript)-1):
-                    song += transcript[x]
+            artist = ""
+            if "next" in transcript or "after this" in transcript:
+                for x in range(index+1, index2):
+                    song += splitTranscript[x]
                     song += " "
+                for x in range(index2+1, len(splitTranscript)-1):
+                    artist += splitTranscript[x]
+                    artist += " "
+                print(song)
+                print(artist)
                 songInfo = self.mpc.queueSong(song)
                 if songInfo == -1:
                     self.playSound("BadSong")
                     return -1
-                self.tts("Added " + songInfo[0] + " by " + songInfo[1] + " to the queue")
-                return 3
+                return
             else:
-                for x in range(index+1, len(transcript)):
-                    song += transcript[x]
+                for x in range(index+1, index2):
+                    song += splitTranscript[x]
                     song += " "
+                for x in range(index2+1, len(splitTranscript)):
+                    artist += splitTranscript[x]
+                    artist += " "
+                print(song)
+                print(artist)
                 songInfo = self.mpc.playSong(song)
                 if songInfo == -1:
                     self.playSound("BadSong")
                     return -1
-                self.tts("Playing " + songInfo[0] + " by " + songInfo[1])
-                return 3
-        song = ""
-        artist = ""
-        if "next" in transcript or "after this" in transcript2:
-            for x in range(index+1, index2):
-                song += transcript[x]
-                song += " "
-            for x in range(index2+1, len(transcript)-1):
-                artist += transcript[x]
-                artist += " "
-            print(song)
-            print(artist)
-            songInfo = self.mpc.queueSong(song)
-            if songInfo == -1:
-                self.playSound("BadSong")
-                return -1
-            song = songInfo[0]
-            artist = songInfo[1]
-            self.tts("Added " + song + " by " + artist + " to the queue")
-            return 3
-        else:
-            for x in range(index+1, index2):
-                song += transcript[x]
-                song += " "
-            for x in range(index2+1, len(transcript)):
-                artist += transcript[x]
-                artist += " "
-            print(song)
-            print(artist)
-            songInfo = self.mpc.playSong(song)
-            if songInfo == -1:
-                self.playSound("BadSong")
-                return -1
-            self.tts("Playing " + songInfo[0] + " by " + songInfo[1])
-            return 3
+                self.isPlaying = self.mpc
+                return
 
     elif "pause" in transcript or ("stop" in transcript and "music" in transcript) or "show" in transcript:
         playDing(self)
-        if any(x in transcript for x in ["tv", "T.V.", "television", "show", "t.v."]):
-            self.roku.togglePlay()
-            return
-        self.isPlaying = 0
-        print("Pausing music")
-        return 2
+        if self.isPlaying != None:
+            self.isPlaying.pause()
+            self.continuePlaying = 0
 
     elif "volume" in transcript:
         playDing(self)
         splitTranscript = transcript.split()
         volume = -1
-        for word in splitTranscript:
+        for word in transcript:
             try:
                 volume = numWords[word]
             except:
@@ -249,7 +254,8 @@ def parse(self, transcript):
 
     elif "skip" in transcript:
         playDing(self)
-        self.mpc.skip()
+        if self.isPlaying != None:
+            self.isPlaying.skip()
 
     elif "go back" in transcript or "previous song" in transcript:
         playDing(self)
@@ -291,6 +297,9 @@ def parse(self, transcript):
         playDing(self)
         self.roku.power()
 
+    elif "hulu" in transcript:
+        playDing(self)
+        self.roku.continueHulu()
 
     elif "exit" in transcript:
         playDing(self)

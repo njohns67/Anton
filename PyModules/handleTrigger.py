@@ -43,10 +43,7 @@ def getAverageRMS(self):
     p.terminate()
     print("Exiting thread")
 
-def record(self, retTranscript=0):
-    if self.isPlaying:
-        self.mpc.pause()
-        print("Pausing music")
+def record(self):
     proc = subprocess.Popen(["play", self.filePaths["dong"]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     self.lightOn()
     self.processes.append(proc)
@@ -95,24 +92,8 @@ def record(self, retTranscript=0):
         self.lightFail()
         #self.play("/home/pi/Anton/Responses/GoodTalk")
         self.isRecording = 0
-        if self.isPlaying == 1:
-            self.mpc.play()
-            print("Playing")
-        self.lightOff()
-        return
-    if retTranscript:
-        return transcript
-    test = self.parseTranscript(transcript)
-    if test == -1:
-        return
-    elif test == 2:         #Music should stay paused
-        self.isPlaying = 0
-    elif test == 3:         #Music needs to be played
-        self.isPlaying = 1
-    if self.isPlaying == 1:
-        self.mpc.play()
-        print("Playing")
-    self.lightOff()
+        return -1
+    return transcript
 
 def processAudio():
     reg = sr.Recognizer()
@@ -145,14 +126,9 @@ def processAudioGoogle():
         print(e)
         return 1
 
-def main(self, retTranscript=0):
+def main(self):
     try:
-        test = record(self, retTranscript)
-        self.isRecording = 0
-        if retTranscript:
-            return test
-        else:
-            return 0
+        return record(self)
     except Exception as e:
         self.isRecording = 0
         excType, excObj, excTb = sys.exc_info()
