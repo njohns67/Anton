@@ -99,3 +99,8 @@ class Pandora:
         if anton.record() == 1:
             self.createStation(station)
 
+    def volumeUp(self):
+        p = Popen(["amixer", "set", "Master", "10%+"], stdout=PIPE, stderr=PIPE)
+
+    def volumeDown(self):
+        p = Popen(["amixer", "set", "Master", "10%-"], stdout=PIPE, stderr=PIPE)

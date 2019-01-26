@@ -3,8 +3,6 @@ import serial, os, signal
 from subprocess import Popen, PIPE
 import random
 
-directory = "/home/pi/Anton/Responses/"
-
 todayWeatherArrays = [["todays", "weather"], ["today", "weather"], ["today's", "weather"], ["the weather in"]]
 tomWeatherArrays = [["tomorrow", "weather"], ["tomorrows", "weather"], ["tomorrow's", "weather"]]
 commandArray = ["light", "joke", "weather", "alarm", "play", "next", 
@@ -32,7 +30,6 @@ def playDing(self):
 def parse(self, transcript):
     transcript = transcript.lower()
     splitTranscript = transcript.split()
-    print(transcript)
     if "joke" in transcript:
         playDingDelay(self)
         self.getJoke()
@@ -112,6 +109,20 @@ def parse(self, transcript):
     elif "play" in transcript or "pray" in transcript or "playing" in transcript:
         if (len(splitTranscript) < 4 and "continue" in transcript) or "play the music" == transcript or "continue playing" in transcript or "play" == transcript:
             print("resuming")
+            self.continuePlaying = 1
+            if self.isPlaying == None:
+                self.play("WhatPlay")
+                self.isResponding = 1
+                transcript = self.record()
+                print(transcript)
+                transcript = transcript.lower()
+                if any(x in transcript for x in ["tv", "t.v.", "television", "hulu", "netflix"]):
+                    self.isPlaying = self.roku
+                elif "music" in transcript:
+                    self.isPlaying = self.mpc
+                elif "pandora" in transcript:
+                    self.isPlaying = self.pandora
+            return
         if any(x in transcript for x in ["netflix", "hulu", "amazon", "prime"]):
             playDing(self)
             if "on" not in transcript:
@@ -137,10 +148,6 @@ def parse(self, transcript):
             print(show)
             print(channel)
             self.playShow(show=show, channel=channel)
-            return
-        if any(x in transcript for x in ["tv", "T.V.", "television", "show", "t.v."]):
-            playDing(self)
-            self.roku.togglePlay()
             return
         elif "pandora" in transcript or "radio" in transcript:
             playDing(self)
@@ -172,7 +179,7 @@ def parse(self, transcript):
                         song += " "
                     songInfo = self.mpc.queueSong(song)
                     if songInfo == -1:
-                        self.playSound("BadSong")
+                        self.play("BadSong")
                         return -1
                     return
                 else:
@@ -181,7 +188,7 @@ def parse(self, transcript):
                         song += " "
                     songInfo = self.mpc.playSong(song)
                     if songInfo == -1:
-                        self.playSound("BadSong")
+                        self.play("BadSong")
                         return -1
                     return
             song = ""
@@ -197,7 +204,7 @@ def parse(self, transcript):
                 print(artist)
                 songInfo = self.mpc.queueSong(song)
                 if songInfo == -1:
-                    self.playSound("BadSong")
+                    self.play("BadSong")
                     return -1
                 return
             else:
@@ -211,7 +218,7 @@ def parse(self, transcript):
                 print(artist)
                 songInfo = self.mpc.playSong(song)
                 if songInfo == -1:
-                    self.playSound("BadSong")
+                    self.play("BadSong")
                     return -1
                 self.isPlaying = self.mpc
                 return
@@ -243,11 +250,51 @@ def parse(self, transcript):
             p.wait()
             return
         if "up" in transcript:
-            self.play("VolumeUp")
-            p = Popen(["amixer", "set", "Master", "10%+"], stdout=PIPE, stderr=PIPE)
+            if self.isPlaying == None:
+                if "tv" in transcript or "television" in transcript or "t.v" in transcript:
+                    self.roku.volumeUp(2)
+                    self.isPlaying = self.roku
+                    return
+                else:
+                    self.play("WhatVolumeUp")
+                    self.isResponding = 1
+                    transcript = self.record().lower()
+                    if "tv" in transcript or "television" in transcript or "t.v." in transcript:
+                        print("Tv volume")
+                        self.roku.volumeUp(2)
+                        self.isPlaying = self.roku
+                        return
+                    else:
+                        self.play("VolumeUp")
+                        self.isPlaying = self.mpc
+                        self.isPlaying.volumeUp()
+                        return
+            else:
+                self.play("VolumeUp")
+                self.isPlaying.volumeUp()
         elif "down" in transcript:
-            self.play("VolumeDown")
-            p = Popen(["amixer", "set", "Master", "10%-"], stdout=PIPE, stderr=PIPE)
+            if self.isPlaying == None:
+                if "tv" in transcript or "television" in transcript or "t.v." in transcript:
+                    self.isPlaying = self.roku
+                    self.roku.volumeDown(2)
+                    return
+                else:
+                    self.play("WhatVolumeDown")
+                    self.isResponding = 1
+                    transcript = self.record().lower()
+                    if "tv" in transcript or "television" in transcript or "t.v." in transcript:
+                        print("Tv volume")
+                        self.isPlaying = self.roku
+                        self.roku.volumeDown(2)
+                        return
+                    else:
+                        self.play("VolumeUp")
+                        self.isPlaying = self.mpc
+                        self.isPlaying.volumeUp()
+                        return
+            else:
+                self.play("VolumeUp")
+                self.isPlaying.volumeUp()
         else:
             #TODO: Add "Would you like the volume up or down?" response
             return

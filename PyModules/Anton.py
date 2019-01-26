@@ -61,17 +61,19 @@ class Anton:
         return APICalls.askQuestion(self, question)
 
     def record(self):
-        if self.isPlaying != None:
+        if self.isPlaying != None and self.isPlaying != self.roku:
             self.isPlaying.pause()
             self.continuePlaying = 0
         transcript = hT.main(self)
+        print(transcript)
         self.isRecording = 0
-        test = self.parseTranscript(transcript)
+        if transcript == -1:
+            self.lightOff()
+            return -1
         if self.isResponding:
-            if any(x in test for x in ["yes", "yeah", "sure", "affirmative", "go"]):
-                return 1
-            else:
-                return 0
+            self.isResponding = 0
+            return transcript
+        test = self.parseTranscript(transcript)
         if test == -1:
             print("Something went wrong")
             pass       #Idk maybe do something with this later it's currently handled in parseTranscript()
@@ -104,9 +106,10 @@ class Anton:
     def tts(self, text, file="delme",  play=1):
         APICalls.tts(self, text, file, play)
 
-    def play(self, path):
+    def play(self, response):
+        directory = "/home/pi/Anton/Responses/"
         if not self.isMuted:
-            APICalls.play(self, path)
+            APICalls.play(self, directory+response)
     
     def playShow(self, show, season="", channel=""):
         self.roku.playShow(show=show, season=season, channel=channel)

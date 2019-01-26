@@ -3,8 +3,9 @@ import xml.etree.ElementTree as ET
 import time
 
 class Roku:
-    def __init__(self, anton, ip="192.168.1.75", port="8060"):
+    def __init__(self, anton="", ip="192.168.1.75", port="8060"):
         self.isOn = 0
+        self.anton = anton
         self.ip = ip
         self.port = port
         self.url = "http://" + ip + ":" + port + "/"
@@ -39,8 +40,8 @@ class Roku:
     def pressKey(self, key, num=1):
         print(num)
         for x in range(0, num):
-            print(x)
             requests.post(self.url+"keypress/"+key)
+            time.sleep(.5)
 
     def launchApp(self, name="", id=""):
         if id != "":
@@ -99,3 +100,10 @@ class Roku:
         self.pressKey("right")
         self.pressKey("down")
         self.pressKey("select")
+
+    def volumeUp(self, num=2):
+        self.pressKey("VolumeUp", num)
+
+    def volumeDown(self, num=2):
+        self.pressKey("VolumeDown", num)
+

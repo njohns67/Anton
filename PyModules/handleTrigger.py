@@ -88,7 +88,7 @@ def record(self):
     w.writeframes(b''.join(frames))
     w.close()
     transcript = processAudio()
-    if transcript == 1:
+    if transcript == -1:
         self.lightFail()
         #self.play("/home/pi/Anton/Responses/GoodTalk")
         self.isRecording = 0
@@ -105,7 +105,7 @@ def processAudio():
         return transcript
     except Exception as e:
         print("No transcript")
-        return 1
+        return -1
 
 def processAudioGoogle():
     proc = subprocess.Popen(["play", self.filePaths["ding"]])

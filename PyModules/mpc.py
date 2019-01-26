@@ -70,4 +70,8 @@ class MPC:
             return -1
         self.addSong(songID)
 
+    def volumeUp(self):
+        p = Popen(["amixer", "set", "Master", "10%+"], stdout=PIPE, stderr=PIPE)
 
+    def volumeDown(self):
+        p = Popen(["amixer", "set", "Master", "10%-"], stdout=PIPE, stderr=PIPE)
