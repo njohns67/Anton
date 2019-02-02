@@ -44,6 +44,9 @@ class Roku:
             time.sleep(.5)
 
     def launchApp(self, name="", id=""):
+        if not self.isOn:
+            self.power()
+            time.sleep(5)
         if id != "":
             requests.post(self.url+"launch/"+id)
         else:
@@ -51,9 +54,6 @@ class Roku:
             requests.post(self.url+"launch/"+self.appIDs[name])
 
     def playShowNetflix(self, show, channel="hulu"):
-        if not self.isOn:
-            self.power()
-            time.sleep(15)
         self.launchApp("netflix")
         time.sleep(15)
         self.pressKey("select")
@@ -106,4 +106,3 @@ class Roku:
 
     def volumeDown(self, num=2):
         self.pressKey("VolumeDown", num)
-

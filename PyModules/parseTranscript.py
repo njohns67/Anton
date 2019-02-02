@@ -111,6 +111,12 @@ def parse(self, transcript):
             print("resuming")
             self.continuePlaying = 1
             if self.isPlaying == None:
+                if any(x in transcript for x in ["tv", "t.v.", "television", "hulu", "netflix"]):
+                    self.isPlaying = self.roku
+                elif "music" in transcript:
+                    self.isPlaying = self.mpc
+                elif "pandora" in transcript:
+                    self.isPlaying = self.pandora
                 self.play("WhatPlay")
                 self.isResponding = 1
                 transcript = self.record()
@@ -216,7 +222,7 @@ def parse(self, transcript):
                     artist += " "
                 print(song)
                 print(artist)
-                songInfo = self.mpc.playSong(song)
+                songInfo = self.mpc.playSong(song, artist=artist)
                 if songInfo == -1:
                     self.play("BadSong")
                     return -1
@@ -228,6 +234,11 @@ def parse(self, transcript):
         if self.isPlaying != None:
             self.isPlaying.pause()
             self.continuePlaying = 0
+        else:
+            self.isPlaying = self.roku
+            self.isPlaying.pause()
+            self.continuePlaying = 0
+            return
 
     elif "volume" in transcript:
         playDing(self)
@@ -251,9 +262,13 @@ def parse(self, transcript):
             return
         if "up" in transcript:
             if self.isPlaying == None:
-                if "tv" in transcript or "television" in transcript or "t.v" in transcript:
+                if "tv" in transcript or "television" in transcript or "t.v" in transcript or "hulu" in transcript or "netflix" in transcript:
                     self.roku.volumeUp(2)
                     self.isPlaying = self.roku
+                    return
+                elif "pandora" in transcript or "music" in transcript:
+                    self.isPlaying = self.mpc
+                    self.isPlaying.volumeUp()
                     return
                 else:
                     self.play("WhatVolumeUp")
@@ -274,9 +289,13 @@ def parse(self, transcript):
                 self.isPlaying.volumeUp()
         elif "down" in transcript:
             if self.isPlaying == None:
-                if "tv" in transcript or "television" in transcript or "t.v." in transcript:
+                if "tv" in transcript or "television" in transcript or "t.v." in transcript or "hulu" in transcript or "netflix" in transcript:
                     self.isPlaying = self.roku
                     self.roku.volumeDown(2)
+                    return
+                elif "pandora" in transcript or "music" in transcript:
+                    self.isPlaying = self.mpc
+                    self.isPlaying.volumeDown()
                     return
                 else:
                     self.play("WhatVolumeDown")
@@ -288,13 +307,13 @@ def parse(self, transcript):
                         self.roku.volumeDown(2)
                         return
                     else:
-                        self.play("VolumeUp")
+                        self.play("VolumeDown")
                         self.isPlaying = self.mpc
-                        self.isPlaying.volumeUp()
+                        self.isPlaying.volumeDown()
                         return
             else:
-                self.play("VolumeUp")
-                self.isPlaying.volumeUp()
+                self.play("VolumeDown")
+                self.isPlaying.volumeDown()
         else:
             #TODO: Add "Would you like the volume up or down?" response
             return
@@ -340,13 +359,26 @@ def parse(self, transcript):
         else:
             self.bellsOff = 0
             
-    elif "tv" in transcript or "t.v." in transcript or "turn off" in transcript:
+    elif "tv" in transcript and ("off" in transcript or "on" in transcript):    
         playDing(self)
-        self.roku.power()
+        if "hulu" in transcript:
+            self.roku.launchApp("hulu")
+        elif "netflix" in transcript:
+            self.roku.launchApp("netflix")
+        else:
+            self.roku.power()
 
-    elif "hulu" in transcript:
+    elif ("launch" in transcript or "open" in transcript or "watch" in transcript) and ("netflix" in transcript or "hulu" in transcript):
         playDing(self)
-        self.roku.continueHulu()
+        if "hulu" in transcript:
+            self.roku.launchApp("hulu")
+        elif "netflix" in transcript:
+            self.roku.launchApp("netflix")
+    
+    elif "type" in transcript:
+        s = splitTranscript[1:]
+        s = " ".join(s)
+        self.roku.sendString(s)
 
     elif "exit" in transcript:
         playDing(self)
