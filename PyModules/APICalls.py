@@ -176,7 +176,7 @@ def getJoke(self):
     print(joke)
     self.tts(joke, "delme", 1)
 
-def tts(self, TEXT, file="delme", PLAY=1):
+def tts(self, TEXT, file="/home/pi/Anton/Responses/delme", PLAY=1):
     client = TTS.TextToSpeechClient()
     sinput = TTS.types.SynthesisInput(text=TEXT)
     voice = TTS.types.VoiceSelectionParams(language_code="en-US", 
@@ -186,7 +186,7 @@ def tts(self, TEXT, file="delme", PLAY=1):
     with open(file + ".mp3", "wb") as out:
         out.write(response.audio_content)
     if PLAY == 1:
-        self.play(file)
+        self.play(file, 0)
 
 def play(self, file):
     p = Popen(["mpg123", file + ".mp3"], stdout=PIPE, stderr=PIPE)

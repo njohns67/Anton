@@ -1,4 +1,5 @@
 from threading import Thread
+from fuzzywuzzy import fuzz
 import pexpect
 import time
 
@@ -6,6 +7,7 @@ class Pandora:
     def __init__(self, anton, station=""):
         self.station = station
         self.anton = anton
+        self.stations = None
         self.isRunning = 0
         self.isPlaying = 0
         self.pandora = None
@@ -18,15 +20,23 @@ class Pandora:
         self.isRunning = 1
         self.isPlaying = 1
         self.pandora = pexpect.spawn("pianobar")
-        self.pandora.expect_exact("stations...")
-        print("Before: ", self.pandora.before.decode())
-        print("After: ", self.pandora.after.decode())
+        self.pandora.expect_exact("Select")
+        stations = self.pandora.before.decode()
+        stations = stations.split('\n')
+        del stations[:3]
+        del stations[-1]
+        for x in range(0, len(stations)):
+            stations[x] = stations[x][13:]
+            stations[x] = stations[x].replace("\r", "")
+            print(stations[x])
         self.pandora.logfile = open("test", "wb")
-        try:
-            self.pandora.sendline(station)
-        except Exception as e:
-            print(e)
-            print("Bad station. I think")
+        self.stations = stations
+        station = self.parseStations(station)
+        print("Station " + station + " selected")
+        if station == -1:
+            print("Bad station")
+            return
+        self.pandora.sendline(station)
 
     def sendCommand(self, command):
         try:
@@ -69,6 +79,9 @@ class Pandora:
             self.startPandora(station)
             return
         self.sendCommand("s")
+        station = parseStations(station)
+        if station == -1:
+            return -1
         self.pandora.sendline(station)
         self.pandora.expect("station:")
         print("Before: ", self.pandora.before.decode())
@@ -104,3 +117,9 @@ class Pandora:
 
     def volumeDown(self):
         p = Popen(["amixer", "set", "Master", "10%-"], stdout=PIPE, stderr=PIPE)
+
+    def parseStations(self, station):
+        for s in self.stations:
+            if fuzz.ratio(station, s) > .7:
+                return s
+        return -1

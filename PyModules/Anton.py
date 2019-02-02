@@ -75,6 +75,9 @@ class Anton:
             return transcript
         test = self.parseTranscript(transcript)
         if test == -1:
+            lightFail()
+            with open("log.txt", "a") as f:
+                f.write("Bad transcript\n")
             print("Something went wrong")
             pass       #Idk maybe do something with this later it's currently handled in parseTranscript()
         self.lightOff()
@@ -103,14 +106,17 @@ class Anton:
     def lightOff(self):
         pr.turn_off_color_delay(delay=.02)
 
-    def tts(self, text, file="delme",  play=1):
+    def tts(self, text, file="/home/pi/Anton/Responses/delme",  play=1):
         APICalls.tts(self, text, file, play)
 
-    def play(self, response):
+    def play(self, response, adddir=1):
         directory = "/home/pi/Anton/Responses/"
         if not self.isMuted:
-            APICalls.play(self, directory+response)
-    
+            if adddir:
+                APICalls.play(self, directory+response)
+            else:
+                APICalls.play(self, response)
+     
     def playShow(self, show, season="", channel=""):
         self.roku.playShow(show=show, season=season, channel=channel)
 
