@@ -1,4 +1,6 @@
 import subprocess, os
+from subprocess import Popen
+
 class MPC:
     def __init__(self, anton):
         self.isPlaying = 0

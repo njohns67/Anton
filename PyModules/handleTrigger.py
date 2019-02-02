@@ -91,6 +91,8 @@ def record(self):
     if transcript == -1:
         self.lightFail()
         #self.play("/home/pi/Anton/Responses/GoodTalk")
+        with open("log.txt", "a") as f:
+            f.write("No transcript\n")
         self.isRecording = 0
         return -1
     return transcript
