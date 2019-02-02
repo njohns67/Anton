@@ -38,14 +38,26 @@ def signal_handler(signal, frame):
 def interrupt_callback():
     global interrupted
     return interrupted
+
+def rec1():
+    with open("log.txt", "a") as f:
+        f.write("\nModel 1\n")
+    anton.record()
+
+def rec2():
+    with open("log.txt", "a") as f:
+        f.write("\nModel 2\n")
+    anton.record()
+
 model = args.models
-sensitivity = [.33, .33]
+funcs = [lambda: rec1(), lambda: rec2()]
+sensitivity = [.33, .30]
 # capture SIGINT signal, e.g., Ctrl+C
 signal.signal(signal.SIGINT, signal_handler)
 detector = snowboydecoder.HotwordDetector(model, sensitivity=sensitivity)
 print('Listening... Press Ctrl+C to exit')
 # main loop
-detector.start(detected_callback=anton.record,
+detector.start(detected_callback=funcs,
                interrupt_check=interrupt_callback,
                sleep_time=0.03)
 
