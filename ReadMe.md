@@ -33,6 +33,7 @@ Anton's current hotword is "Hey Anton", but can be changed with a few minor twea
 - Roku TV Control
 - Spotify Playback
 - Pandora Playback
+- Set a timer
 
 
 **Future Commands/Features Include:**
