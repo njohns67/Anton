@@ -22,3 +22,10 @@ def beerMe():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((IP, port))
     s.send("l".encode())
+
+def changeThermostatMode(mode):
+    IP = "192.168.1.74"
+    port = 80
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((IP, port))
+    s.send(str(mode).encode())

@@ -11,6 +11,7 @@ import time
 from roku import Roku
 from mpc import MPC
 from pandora import Pandora
+from thermostat import Thermostat
 
 class Anton:
     def __init__(self, debug=0, verbose=0):
@@ -19,6 +20,7 @@ class Anton:
         self.roku = Roku(self, "192.168.1.75")
         self.mpc = MPC(self)
         self.pandora = Pandora(self)
+        self.thermostat = Thermostat(self)
         pr.set_brightness(100)
         self.isRecording = 0
         self.isPlaying = None

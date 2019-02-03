@@ -5,7 +5,7 @@ import random
 
 todayWeatherArrays = [["todays", "weather"], ["today", "weather"], ["today's", "weather"], ["the weather in"]]
 tomWeatherArrays = [["tomorrow", "weather"], ["tomorrows", "weather"], ["tomorrow's", "weather"]]
-commandArray = ["light", "joke", "weather", "alarm", "play", "next", 
+commandArray = ["joke", "weather", "alarm", "play", "next", 
                 "pause", "volume", "skip", "feed", "beer", "exit", "scout"]
 weatherDayArray = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "today", "tomorrow"]
 questionArray = ["who", "whose", "who's", "whos", 
@@ -379,6 +379,12 @@ def parse(self, transcript):
         s = splitTranscript[1:]
         s = " ".join(s)
         self.roku.sendString(s)
+
+    elif "heat" in transcript and "on" in transcript:
+        self.thermostat.changeMode(2)
+
+    elif "ac" in transcript and "on" in transcript:
+        self.thermostat.changeMode(1)
 
     elif "exit" in transcript:
         playDing(self)
