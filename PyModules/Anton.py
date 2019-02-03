@@ -75,7 +75,7 @@ class Anton:
             return transcript
         test = self.parseTranscript(transcript)
         if test == -1:
-            lightFail()
+            self.lightFail()
             with open("log.txt", "a") as f:
                 f.write("Bad transcript\n")
             print("Something went wrong")
