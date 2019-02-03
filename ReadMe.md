@@ -19,6 +19,8 @@ Anton relies on Snowboy for Python3 for hotword detection and must be installed 
 - google.cloud
 - mopidy && mopidy-spotify
 - mpc
+- fuzzy wuzzy
+- pianobar
 
 # Commands
 Anton's current hotword is "Hey Anton", but can be changed with a few minor tweaks.
