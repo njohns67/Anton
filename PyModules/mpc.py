@@ -1,5 +1,4 @@
 import subprocess, os
-from subprocess import Popen
 
 class MPC:
     def __init__(self, anton):
@@ -36,7 +35,10 @@ class MPC:
             play = play[0].split()
         p = subprocess.Popen(["mpc", "seek", "0"])
         p.wait()
-        Index = play.index("-")
+        try:
+            Index = play.index("-")
+        except:
+            return -1
         artist = " ".join(play[:Index])
         song = " ".join(play[Index+1:])
         print(song)
@@ -73,7 +75,7 @@ class MPC:
         self.addSong(songID)
 
     def volumeUp(self):
-        p = Popen(["amixer", "set", "Master", "10%+"], stdout=PIPE, stderr=PIPE)
+        p = subprocess.Popen(["amixer", "set", "Master", "10%+"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def volumeDown(self):
-        p = Popen(["amixer", "set", "Master", "10%-"], stdout=PIPE, stderr=PIPE)
+        p = subprocess.Popen(["amixer", "set", "Master", "10%-"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

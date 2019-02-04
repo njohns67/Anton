@@ -5,6 +5,7 @@ import requests, json
 import string
 from urllib.parse import quote
 from subprocess import Popen, PIPE
+import miscFunctions as mf
 
 
 def getKey():
@@ -38,7 +39,7 @@ def parseWeatherResponse(response, city, day):
     tempMax = 0
     tempMin = 200
     startTime = 0
-    addDays = getTargetDay(day)
+    addDays = mf.getTargetDay(day)
     desc = response["list"][4]["weather"][0]["description"]
     if "sky" in desc:
         desc += "s"
@@ -105,28 +106,6 @@ def parseWeatherResponse(response, city, day):
     ret = [speak, speakRain, rainBool]
     return ret
 
-#Returns the number of days to add to the current day to get to the target day
-def getTargetDay(day="today"):
-    daysArray =["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-    currentDay = datetime.datetime.today().weekday()
-    targetDay = -1
-    if day == "today":
-        targetDay = currentDay
-    elif day == "tomorrow":
-        targetDay = currentDay + 1
-        if targetDay == 7:
-            targetDay = 0
-    else:
-        targetDay = daysArray.index(day)
-    addDays = 0
-    for x in range(0, 7):
-        if currentDay == targetDay:
-            break
-        currentDay += 1
-        if currentDay == 7:
-            currentDay = 0
-        addDays += 1
-    return addDays
 
 def askQuestion(self, question):
         url = "http://api.wolframalpha.com/v2/result?"

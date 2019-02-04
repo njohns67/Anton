@@ -2,7 +2,7 @@ from threading import Thread
 from fuzzywuzzy import fuzz
 import pexpect
 import time
-
+from subprocess import Popen, PIPE
 class Pandora:
     def __init__(self, anton, station=""):
         self.station = station
