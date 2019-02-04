@@ -1,6 +1,6 @@
 from threading import Thread
 import wifiDevices
-import time as T
+import time
 import datetime as dt
 import miscFunctions as mf
 
@@ -11,11 +11,11 @@ class Thermostat:           #Mode 1 for cool, 2 for heat
         self.temp = temp
         self.mode = mode
 
-    def changeModeDelay(self, time, mode):
-        time = mf.subtractTimes(time)
+    def changeModeDelay(self, wallTime, mode):
+        wallTimeime = mf.subtractTimes(wallTimeime)
         def countdown():
             print("Sleeping")
-            T.sleep(time)
+            time.sleep(wallTime)
             self.changeMode(mode)
             print("Changing")
         thread = Thread(target=countdown)
