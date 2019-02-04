@@ -38,7 +38,6 @@ class Roku:
             requests.post(self.url+"keypress/Lit_"+c)
 
     def pressKey(self, key, num=1):
-        print(num)
         for x in range(0, num):
             requests.post(self.url+"keypress/"+key)
             time.sleep(.5)
@@ -62,7 +61,6 @@ class Roku:
         self.pressKey("select")
         self.sendString(show)
         for x in range(0, len(self.letterPosition)):
-            print(x)
             if show[len(show)-1] in self.letterPosition[x]:
                 num = x
                 break
@@ -78,7 +76,6 @@ class Roku:
 
     def playShow(self, show, channel="hulu", season=""):
         channel = channel.lower()
-        print(self.isOn)
         if not self.isOn:
             self.power()
         requests.post(self.url+"search/browse", params={"provider": channel, "season": season, "match-any": "true", "launch": "true", "title": show})
@@ -109,3 +106,10 @@ class Roku:
     def volumeDown(self, num=2):
         self.anton.isPlaying = self.anton.roku
         self.pressKey("VolumeDown", num)
+
+    def mute(self):
+        self.anton.isPlaying = self.anton.roku
+        self.pressKey("VolumeMute")
+
+    def unMute(self):
+        self.mute()

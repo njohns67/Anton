@@ -11,6 +11,8 @@ class Pandora:
         self.isRunning = 0
         self.isPlaying = 0
         self.pandora = None
+        self.volume = 50
+        self.setVolume(self.volume)
         if self.station != "":
             pass
 
@@ -112,14 +114,27 @@ class Pandora:
         if anton.record() == 1:
             self.createStation(station)
 
-    def volumeUp(self, volume=0):
-        p = Popen(["amixer", "set", "Master", "10%+"], stdout=PIPE, stderr=PIPE)
-
-    def volumeDown(self, volume=0):
-        p = Popen(["amixer", "set", "Master", "10%-"], stdout=PIPE, stderr=PIPE)
-
     def parseStations(self, station):
         for s in self.stations:
             if fuzz.ratio(station, s) > .7:
                 return s
         return -1
+
+    def volumeUp(self, volume=0):
+        p = Popen(["amixer", "set", "Master", "10%+"], stdout=PIPE, stderr=PIPE)
+        self.volume += 10
+        if self.volume > 100:
+            self.volume = 100
+
+    def volumeDown(self, volume=0):
+        p = Popen(["amixer", "set", "Master", "10%-"], stdout=PIPE, stderr=PIPE)
+        self.volume -= 10
+        if self.volume < 0:
+            self.volume = 0
+
+    def setVolume(self, volume):
+        p = Popen(["amixer", "set", "Master", str(volume)+"%"], stdout=PIPE, stderr=PIPE)
+        self.volume = volume
+
+    def mute(self):
+        p = subprocess.Popen(["amixer", "set", "Master", "0%"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

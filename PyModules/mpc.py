@@ -1,10 +1,12 @@
-import subprocess, os
+import os, subprocess
 
 class MPC:
     def __init__(self, anton):
         self.isPlaying = 0
         self.isRunning = 0
         self.anton = anton
+        self.volume = 50
+        self.setVolume(self.volume)
 
     def findSong(self, song, artist=""):
         search = subprocess.check_output(["mpc", "search", "title", song, "artist", artist]).decode()
@@ -76,6 +78,23 @@ class MPC:
 
     def volumeUp(self, volume=0):
         p = subprocess.Popen(["amixer", "set", "Master", "10%+"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.volume += 10
+        if self.volume > 100:
+            self.volume == 100
 
     def volumeDown(self, volume=0):
         p = subprocess.Popen(["amixer", "set", "Master", "10%-"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.volume -= 10
+        if self.volume < 0:
+            self.volume = 0
+
+    def mute(self):
+        p = subprocess.Popen(["amixer", "set", "Master", "0%"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    def setVolume(self, volume):
+        p = subprocess.Popen(["amixer", "set", "Master", str(volume) + "%"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p.wait()
+        self.volume = volume
+
+    def unMute(self):
+        self.setVolume(self.volume)

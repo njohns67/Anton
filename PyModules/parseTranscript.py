@@ -31,7 +31,6 @@ def playDing(self):
 def parse(self, transcript):
     transcript = transcript.lower()
     splitTranscript = transcript.split()
-    print(transcript)
     if "joke" in transcript:
         playDingDelay(self)
         self.getJoke()
@@ -250,7 +249,6 @@ def parse(self, transcript):
             volume = mf.wordToNum(word)
             if volume != -1:
                 break
-        print(str(volume))
         if volume != -1 and "tv" not in transcript and "t.v." not in transcript and "netflix" not in transcript and "hulu" not in transcript:
             self.tts("Setting the volume to " + str(volume))
             volume *= 10
@@ -260,7 +258,6 @@ def parse(self, transcript):
         if "up" in transcript:
             if self.isPlaying == None:
                 if "tv" in transcript or "television" in transcript or "t.v" in transcript or "hulu" in transcript or "netflix" in transcript:
-                    print("tv")
                     if volume == -1:
                         volume = 2
                     self.roku.volumeUp(volume)
@@ -276,7 +273,6 @@ def parse(self, transcript):
                     transcript = self.record().lower()
                     playDingDelay(self)
                     if "tv" in transcript or "television" in transcript or "t.v." in transcript:
-                        print("Tv volume")
                         self.roku.volumeUp(2)
                         self.isPlaying = self.roku
                         return
@@ -306,7 +302,6 @@ def parse(self, transcript):
                     transcript = self.record().lower()
                     playDingDelay(self)
                     if "tv" in transcript or "television" in transcript or "t.v." in transcript:
-                        print("Tv volume")
                         self.isPlaying = self.roku
                         self.roku.volumeDown(2)
                         return
@@ -348,12 +343,33 @@ def parse(self, transcript):
             self.play(file)
 
     elif "mute" in transcript:
-        self.play("Mute")
-        self.isMuted = 1
-
+        if "mode" in transcript:
+            if "on" in transcript or "enable" in transcript:
+                self.play("Mute")
+                self.isMuted = 1
+            elif "off" in transcript or "disable" in transcript:
+                self.play("Unmuted")
+                self.isMuted = 0
+        else:
+            if self.isPlaying == None:
+                if any(x in transcript for x in ["tv", "t.v.", "hulu", "netflix"]):
+                    self.isPlaying = self.roku
+                    self.isPlaying.mute()
+                else:
+                    self.isPlaying = self.mpc
+                    self.isPlaying.mute()
+            else:
+                self.isPlaying.mute()
     elif any(x in transcript for x in ["unmute", "un-mute", "volume up", "up the volume"]):
-        self.play("Unmuted")
-        self.isMuted = 0
+        if self.isPlaying == None:
+            if any(x in transcript for x in ["tv", "t.v.", "hulu", "netflix"]):
+                self.isPlaying = self.roku
+                self.isPlaying.unMute()
+            else:
+                self.isPlaying = self.mpc
+                self.isPlaying.unMute()
+        else:
+            self.isPlaying.unMute()
 
     elif "silent" in transcript:
         if "toggle" in transcript:
