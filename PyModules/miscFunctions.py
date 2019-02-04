@@ -101,5 +101,8 @@ def wordToNum(word):
         word = int(word)
         return word
     except:
-        word = numWords[word]
-        return word
+        try:
+            word = numWords[word]
+            return word
+        except:
+            return -1

@@ -74,8 +74,8 @@ class MPC:
             return -1
         self.addSong(songID)
 
-    def volumeUp(self):
+    def volumeUp(self, volume=0):
         p = subprocess.Popen(["amixer", "set", "Master", "10%+"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    def volumeDown(self):
+    def volumeDown(self, volume=0):
         p = subprocess.Popen(["amixer", "set", "Master", "10%-"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

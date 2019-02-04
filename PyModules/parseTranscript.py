@@ -31,6 +31,7 @@ def playDing(self):
 def parse(self, transcript):
     transcript = transcript.lower()
     splitTranscript = transcript.split()
+    print(transcript)
     if "joke" in transcript:
         playDingDelay(self)
         self.getJoke()
@@ -246,16 +247,11 @@ def parse(self, transcript):
         splitTranscript = transcript.split()
         volume = -1
         for word in splitTranscript:
-            try:
-                volume = numWords[word]
-            except:
-                pass
-            try:
-                volume = int(word)
-            except:
-                continue
+            volume = mf.wordToNum(word)
+            if volume != -1:
+                break
         print(str(volume))
-        if volume != -1:
+        if volume != -1 and "tv" not in transcript and "t.v." not in transcript and "netflix" not in transcript and "hulu" not in transcript:
             self.tts("Setting the volume to " + str(volume))
             volume *= 10
             p = Popen(["amixer", "set", "Master", str(volume) + "%"], stdout=PIPE, stderr=PIPE)
@@ -264,7 +260,10 @@ def parse(self, transcript):
         if "up" in transcript:
             if self.isPlaying == None:
                 if "tv" in transcript or "television" in transcript or "t.v" in transcript or "hulu" in transcript or "netflix" in transcript:
-                    self.roku.volumeUp(2)
+                    print("tv")
+                    if volume == -1:
+                        volume = 2
+                    self.roku.volumeUp(volume)
                     self.isPlaying = self.roku
                     return
                 elif "pandora" in transcript or "music" in transcript:
@@ -288,12 +287,14 @@ def parse(self, transcript):
                         return
             else:
                 self.play("VolumeUp")
-                self.isPlaying.volumeUp()
+                self.isPlaying.volumeUp(volume)
         elif "down" in transcript:
             if self.isPlaying == None:
                 if "tv" in transcript or "television" in transcript or "t.v." in transcript or "hulu" in transcript or "netflix" in transcript:
+                    if volume == -1:
+                        volume = 2
+                    self.roku.volumeDown(volume)
                     self.isPlaying = self.roku
-                    self.roku.volumeDown(2)
                     return
                 elif "pandora" in transcript or "music" in transcript:
                     self.isPlaying = self.mpc
@@ -316,7 +317,7 @@ def parse(self, transcript):
                         return
             else:
                 self.play("VolumeDown")
-                self.isPlaying.volumeDown()
+                self.isPlaying.volumeDown(volume)
         else:
             #TODO: Add "Would you like the volume up or down?" response
             return
@@ -420,6 +421,9 @@ def parse(self, transcript):
             temp = str(firstNume) + str(secondNum) + str(thirdNum)
             temp = int(temp)
         self.setOven(temp)
+
+    elif "never mind" in transcript:
+        return
 
     elif "exit" in transcript:
         playDing(self)
