@@ -17,6 +17,7 @@ questionArray = ["who", "whose", "who's", "whos",
                  "how", "how's", "hows"]
 numWords = {"mute": 0, "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, 
             "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
+tvArray = ["tv", "t.v.", "television", "hulu", "netflix"]
 
 def playDingDelay(self):
     if not self.bellsOff:
@@ -243,79 +244,57 @@ def parse(self, transcript):
 
     elif "volume" in transcript:
         playDing(self)
-        splitTranscript = transcript.split()
-        volume = -1
-        for word in splitTranscript:
-            volume = mf.wordToNum(word)
-            if volume != -1:
-                break
-        if volume != -1 and "tv" not in transcript and "t.v." not in transcript and "netflix" not in transcript and "hulu" not in transcript:
-            self.tts("Setting the volume to " + str(volume))
-            volume *= 10
-            p = Popen(["amixer", "set", "Master", str(volume) + "%"], stdout=PIPE, stderr=PIPE)
-            p.wait()
-            return
-        if "up" in transcript:
-            if self.isPlaying == None:
-                if "tv" in transcript or "television" in transcript or "t.v" in transcript or "hulu" in transcript or "netflix" in transcript:
-                    if volume == -1:
-                        volume = 2
-                    self.roku.volumeUp(volume)
-                    self.isPlaying = self.roku
-                    return
-                elif "pandora" in transcript or "music" in transcript:
-                    self.isPlaying = self.mpc
-                    self.isPlaying.volumeUp()
-                    return
-                else:
-                    self.play("WhatVolumeUp")
-                    self.isResponding = 1
-                    transcript = self.record().lower()
-                    playDingDelay(self)
-                    if "tv" in transcript or "television" in transcript or "t.v." in transcript:
-                        self.roku.volumeUp(2)
-                        self.isPlaying = self.roku
-                        return
-                    else:
-                        self.play("VolumeUp")
-                        self.isPlaying = self.mpc
-                        self.isPlaying.volumeUp()
-                        return
+        if self.isPlaying == None:
+            if any(x in transcript for x in tvArray):
+                self.isPlaying = self.roku
+            elif "music" in transcript:
+                self.isPlaying = self.mpc
+            elif "pandora" in transcript:
+                self.isPlaying = self.pandora
             else:
+                self.play("WhatVolume")
+                self.isResponding = 1
+                transcript = self.record().lower()
+                if any(x in transcript for x in tvArray):
+                    self.isPlaying = self.roku
+                elif "music" in transcript:
+                    self.isPlaying = self.mpc
+                elif "pandora" in transcript:
+                    self.isPlaying = self.pandora
+                else:
+                    return -1
+        def changeVolume():
+            volume = -1
+            for word in splitTranscript:
+                volume = mf.wordToNum(word)
+                if volume != -1:
+                    break
+            if volume != -1:
+                if self.isPlaying == None:
+                    if any(x in transcript for x in tvArray):
+                        self.isPlaying = self.roku
+                        self.isPlaying.setVolume(volume)
+                    elif "music" in transcript or "pandora" in transcript:
+                        self.isPlaying = self.mpc
+                        self.isPlaying.setVolume(volume)
+                else:
+                    self.isPlaying.setVolume(volume)
+                return
+            if "up" in transcript:
                 self.play("VolumeUp")
                 self.isPlaying.volumeUp(volume)
-        elif "down" in transcript:
-            if self.isPlaying == None:
-                if "tv" in transcript or "television" in transcript or "t.v." in transcript or "hulu" in transcript or "netflix" in transcript:
-                    if volume == -1:
-                        volume = 2
-                    self.roku.volumeDown(volume)
-                    self.isPlaying = self.roku
-                    return
-                elif "pandora" in transcript or "music" in transcript:
-                    self.isPlaying = self.mpc
-                    self.isPlaying.volumeDown()
-                    return
-                else:
-                    self.play("WhatVolumeDown")
-                    self.isResponding = 1
-                    transcript = self.record().lower()
-                    playDingDelay(self)
-                    if "tv" in transcript or "television" in transcript or "t.v." in transcript:
-                        self.isPlaying = self.roku
-                        self.roku.volumeDown(2)
-                        return
-                    else:
-                        self.play("VolumeDown")
-                        self.isPlaying = self.mpc
-                        self.isPlaying.volumeDown()
-                        return
-            else:
+            elif "down" in transcript:
                 self.play("VolumeDown")
                 self.isPlaying.volumeDown(volume)
-        else:
-            #TODO: Add "Would you like the volume up or down?" response
-            return
+            else:
+                return -1
+
+        if changeVolume() == -1:
+            self.play("VolumeUpOrDown")
+            self.isResponding = 1
+            transcript = self.record().lower()
+            splitTranscript = transcript.split()
+            return changeVolume()
 
     elif "skip" in transcript:
         playDing(self)

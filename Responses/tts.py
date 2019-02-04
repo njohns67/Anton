@@ -11,8 +11,9 @@ while 1:
 	file = input("\nEnter name of file\n")
 	file = file + ".mp3"
 	sinput = tts.types.SynthesisInput(text=TEXT)
-	voice = tts.types.VoiceSelectionParams(language_code="en-US",
-	ssml_gender=tts.enums.SsmlVoiceGender.MALE)
+	voice = tts.types.VoiceSelectionParams(language_code="en-GB",
+                name="en-GB-Standard-D",
+	        ssml_gender=tts.enums.SsmlVoiceGender.MALE)
 	config = tts.types.AudioConfig(audio_encoding=tts.enums.AudioEncoding.MP3)
 	response = client.synthesize_speech(sinput, voice, config)
 	with open(file, "wb") as out:

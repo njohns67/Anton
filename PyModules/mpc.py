@@ -6,7 +6,8 @@ class MPC:
         self.isRunning = 0
         self.anton = anton
         self.volume = 50
-        self.setVolume(self.volume)
+        p = subprocess.Popen(["amixer", "set", "Master", str(self.volume) + "%"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p.wait()
 
     def findSong(self, song, artist=""):
         search = subprocess.check_output(["mpc", "search", "title", song, "artist", artist]).decode()
@@ -92,6 +93,8 @@ class MPC:
         p = subprocess.Popen(["amixer", "set", "Master", "0%"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def setVolume(self, volume):
+        volume *= volume
+        self.anton.tts("Setting the volume to " + str(volume))
         p = subprocess.Popen(["amixer", "set", "Master", str(volume) + "%"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.wait()
         self.volume = volume

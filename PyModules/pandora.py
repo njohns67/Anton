@@ -12,7 +12,6 @@ class Pandora:
         self.isPlaying = 0
         self.pandora = None
         self.volume = 50
-        self.setVolume(self.volume)
         if self.station != "":
             pass
 
@@ -133,6 +132,8 @@ class Pandora:
             self.volume = 0
 
     def setVolume(self, volume):
+        self.anton.tts("Setting the volume to " + str(volume))
+        volume *= volume
         p = Popen(["amixer", "set", "Master", str(volume)+"%"], stdout=PIPE, stderr=PIPE)
         self.volume = volume
 

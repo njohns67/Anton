@@ -18,7 +18,7 @@ class Anton:
         self.power = LED(5)
         self.power.on()
         self.roku = Roku(self, "192.168.1.75")
-        self.mpc = MPC(self)
+        self.mpc = MPC(anton=self)
         self.pandora = Pandora(self)
         self.thermostat = Thermostat(self)
         pr.set_brightness(100)
