@@ -74,6 +74,7 @@ class Roku:
     def power(self):
         requests.post(self.url+"keypress/power")
         self.isOn = not self.isOn
+        self.anton.isPlaying = self.anton.roku
 
     def playShow(self, show, channel="hulu", season=""):
         channel = channel.lower()
@@ -102,7 +103,9 @@ class Roku:
         self.pressKey("select")
 
     def volumeUp(self, num=2):
+        self.anton.isPlaying = self.anton.roku
         self.pressKey("VolumeUp", num)
 
     def volumeDown(self, num=2):
+        self.anton.isPlaying = self.anton.roku
         self.pressKey("VolumeDown", num)

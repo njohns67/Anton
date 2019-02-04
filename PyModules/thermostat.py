@@ -2,6 +2,7 @@ from threading import Thread
 import wifiDevices
 import time as T
 import datetime as dt
+import miscFunctions as mf
 
 
 class Thermostat:           #Mode 1 for cool, 2 for heat
@@ -11,7 +12,7 @@ class Thermostat:           #Mode 1 for cool, 2 for heat
         self.mode = mode
 
     def changeModeDelay(self, time, mode):
-        time = self.convertTimes(time)
+        time = mf.subtractTimes(time)
         def countdown():
             print("Sleeping")
             T.sleep(time)
@@ -24,15 +25,4 @@ class Thermostat:           #Mode 1 for cool, 2 for heat
     def changeMode(self, mode):
         wifiDevices.changeThermostatMode(mode)
         self.mode = mode
-
-    def convertTimes(self, time):
-        t = dt.datetime.now()
-        if time.hour < t.hour:
-            time += dt.timedelta(days=1)
-        diff = time - t
-        diff = diff.total_seconds()
-        print(t)
-        print(time)
-        print(str(int(diff)))
-        return diff
 

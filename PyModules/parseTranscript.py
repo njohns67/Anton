@@ -2,6 +2,7 @@ from time import sleep
 import serial, os, signal
 from subprocess import Popen, PIPE
 import random
+import miscFunctions as mf
 
 todayWeatherArrays = [["todays", "weather"], ["today", "weather"], ["today's", "weather"], ["the weather in"]]
 tomWeatherArrays = [["tomorrow", "weather"], ["tomorrows", "weather"], ["tomorrow's", "weather"]]
@@ -244,7 +245,7 @@ def parse(self, transcript):
         playDing(self)
         splitTranscript = transcript.split()
         volume = -1
-        for word in transcript:
+        for word in splitTranscript:
             try:
                 volume = numWords[word]
             except:
@@ -274,6 +275,7 @@ def parse(self, transcript):
                     self.play("WhatVolumeUp")
                     self.isResponding = 1
                     transcript = self.record().lower()
+                    playDingDelay(self)
                     if "tv" in transcript or "television" in transcript or "t.v." in transcript:
                         print("Tv volume")
                         self.roku.volumeUp(2)
@@ -301,6 +303,7 @@ def parse(self, transcript):
                     self.play("WhatVolumeDown")
                     self.isResponding = 1
                     transcript = self.record().lower()
+                    playDingDelay(self)
                     if "tv" in transcript or "television" in transcript or "t.v." in transcript:
                         print("Tv volume")
                         self.isPlaying = self.roku
@@ -381,10 +384,42 @@ def parse(self, transcript):
         self.roku.sendString(s)
 
     elif "heat" in transcript and "on" in transcript:
+        if "in" in splitTranscript or "at" in splitTranscript:
+            t = mf.speechToTime(transcript)
+            self.thermostat.changeModeDelay(t, 2)
+            return
         self.thermostat.changeMode(2)
 
     elif "ac" in transcript and "on" in transcript:
+        if "in" in splitTranscript or "at" in splitTranscript:
+            t = mf.speechToTime(transcript)
+            print(t)
+            self.thermostat.changeModeDelay(t, 1)
+            return
         self.thermostat.changeMode(1)
+
+    elif "oven" in transcript:
+        playDingDelay(self)
+        if "off" in transcript:
+            self.setOven(0)
+            return
+        temp = 0
+        for word in splitTranscript:
+            try:
+                temp = int(word)
+            except:
+                continue
+        if temp == 0:
+            try:
+                toIndex = splitTranscript.index("to")
+            except:
+                return -1
+            firstNum = numWords[splitTranscript[toIndex+1]]
+            secondNum = numWords[splitTranscript[toIndex+2]]
+            thirdNum = numWords[splitTranscript[toIndex+3]]
+            temp = str(firstNume) + str(secondNum) + str(thirdNum)
+            temp = int(temp)
+        self.setOven(temp)
 
     elif "exit" in transcript:
         playDing(self)
