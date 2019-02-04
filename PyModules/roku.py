@@ -3,9 +3,11 @@ import xml.etree.ElementTree as ET
 import time
 
 class Roku:
-    def __init__(self, anton="", ip="192.168.1.75", port="8060"):
+    def __init__(self, anton="", ip="192.168.1.75", port="8060", volume=15):
         self.isOn = 0
         self.anton = anton
+        self.volume = volume
+        self.isMuted = 0
         self.ip = ip
         self.port = port
         self.url = "http://" + ip + ":" + port + "/"
@@ -100,16 +102,20 @@ class Roku:
         self.pressKey("select")
 
     def volumeUp(self, num=2):
+        self.volume += num
         self.anton.isPlaying = self.anton.roku
         self.pressKey("VolumeUp", num)
 
     def volumeDown(self, num=2):
+        self.volume -= num
         self.anton.isPlaying = self.anton.roku
         self.pressKey("VolumeDown", num)
 
     def mute(self):
+        self.isMuted = 1
         self.anton.isPlaying = self.anton.roku
         self.pressKey("VolumeMute")
 
     def unMute(self):
+        self.isMuted = 0
         self.mute()

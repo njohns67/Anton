@@ -346,10 +346,10 @@ def parse(self, transcript):
         if "mode" in transcript:
             if "on" in transcript or "enable" in transcript:
                 self.play("Mute")
-                self.isMuted = 1
+                self.bellsOff = 1
             elif "off" in transcript or "disable" in transcript:
                 self.play("Unmuted")
-                self.isMuted = 0
+                self.bellsOff = 0
         else:
             if self.isPlaying == None:
                 if any(x in transcript for x in ["tv", "t.v.", "hulu", "netflix"]):
