@@ -31,7 +31,7 @@ def getAverageRMS(self):
             rmsData.append(rms)
             if len(rmsData) > 100:
                 averageRms = int(sum(rmsData)/len(rmsData))
-                self.recordingInfo["minRMS"] = int(averageRms * 1.3)
+                self.recordingInfo["minRMS"] = int(averageRms * 1.1)
             if len(rmsData) > 1000:
                 rmsData = []
         if self.isRecording:

@@ -29,3 +29,10 @@ def changeThermostatMode(mode):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((IP, port))
     s.send(str(mode).encode())
+
+def setOven(temp):
+    IP = "192.168.1.79"
+    port = 80
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((IP, port))
+    s.send(str(temp).encode())

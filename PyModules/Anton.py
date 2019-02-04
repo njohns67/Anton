@@ -32,7 +32,7 @@ class Anton:
         self.isMuted = 0
         self.bellsOff = 0
         self.isResponding = 0
-        self.recordingInfo = {"minRMS": 10000000, "length": 8, "samplerate": 48000,
+        self.recordingInfo = {"minRMS": 1000000, "length": 8, "samplerate": 48000,
                               "channels": 1, "width": 2, "chunk": 1024, "tempFileName": "temp.wav"}
         self.filePaths = {"dong": "/home/pi/Anton/Sounds/dong.wav", "ding": "/home/pi/Anton/Sounds/ding.wav"}
         if self.verbose:
@@ -52,8 +52,6 @@ class Anton:
             return pT.parse(self, transcript)
         else:
             test = pT.parse(self, transcript)
-            if self.continuePlaying:
-                self.isPlaying.play()
             return test
 
     def getForecast(self, city="Menomonee Falls", day="today"):
@@ -65,11 +63,12 @@ class Anton:
     def record(self):
         if self.isPlaying != None and self.isPlaying != self.roku:
             self.isPlaying.pause()
-            self.continuePlaying = 0
         transcript = hT.main(self)
         print(transcript)
         self.isRecording = 0
         if transcript == -1:
+            if self.continuePlaying:
+                self.isPlaying.play()
             self.lightOff()
             return -1
         if self.isResponding:
@@ -82,6 +81,8 @@ class Anton:
                 f.write("Bad transcript\n")
             print("Something went wrong")
             pass       #Idk maybe do something with this later it's currently handled in parseTranscript()
+        if self.continuePlaying:
+            self.isPlaying.play()
         self.lightOff()
 
     def feedScout(self):
@@ -97,16 +98,32 @@ class Anton:
             hT.getAverageRMS(self)
 
     def lightOn(self):
-        pr.set_color_delay(r=0, g=0, b=255, delay=.02)
+        def f():
+            pr.set_color_delay(r=0, g=0, b=255, delay=.02)
+        thread = Thread(target=f)
+        thread.daemon = True
+        thread.start()
 
     def lightSuccess(self):
-        pr.set_color(r=0, g=255, b=0)
+        def f():
+            pr.set_color(r=0, g=255, b=0)
+        thread = Thread(target=f)
+        thread.daemon = True
+        thread.start()
 
     def lightFail(self):
-        pr.set_color(r=255, g=0, b=0)
+        def f():
+            pr.set_color(r=255, g=0, b=0)
+        thread = Thread(target=f)
+        thread.daemon = True
+        thread.start()
 
     def lightOff(self):
-        pr.turn_off_color_delay(delay=.02)
+        def f():
+            pr.turn_off_color_delay(delay=.02)
+        thread = Thread(target=f)
+        thread.daemon = True
+        thread.start()
 
     def tts(self, text, file="/home/pi/Anton/Responses/delme",  play=1):
         APICalls.tts(self, text, file, play)
@@ -121,6 +138,13 @@ class Anton:
      
     def playShow(self, show, season="", channel=""):
         self.roku.playShow(show=show, season=season, channel=channel)
+
+    def setOven(self, temp):
+        wifiDevices.setOven(temp)
+        if temp == 0:
+            self.play("OvenOff")
+            return
+        self.tts("Setting the oven to " + str(temp))
 
     def printSubprocessOutput(self):
        while self.isDead != 1:
