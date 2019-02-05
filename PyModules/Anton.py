@@ -61,6 +61,7 @@ class Anton:
         return APICalls.askQuestion(self, question)
 
     def record(self):
+        self.isRecording = 1
         if self.isPlaying != None and self.isPlaying != self.roku:
             self.isPlaying.pause()
         transcript = hT.main(self)

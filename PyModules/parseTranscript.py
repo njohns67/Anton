@@ -244,6 +244,11 @@ def parse(self, transcript):
 
     elif "volume" in transcript:
         playDing(self)
+        volume = -1
+        for word in splitTranscript:
+            volume = mf.wordToNum(word)
+            if volume != -1:
+                break
         if self.isPlaying == None:
             if any(x in transcript for x in tvArray):
                 self.isPlaying = self.roku
@@ -263,38 +268,30 @@ def parse(self, transcript):
                     self.isPlaying = self.pandora
                 else:
                     return -1
-        def changeVolume():
-            volume = -1
-            for word in splitTranscript:
-                volume = mf.wordToNum(word)
-                if volume != -1:
-                    break
-            if volume != -1:
-                if self.isPlaying == None:
-                    if any(x in transcript for x in tvArray):
-                        self.isPlaying = self.roku
-                        self.isPlaying.setVolume(volume)
-                    elif "music" in transcript or "pandora" in transcript:
-                        self.isPlaying = self.mpc
-                        self.isPlaying.setVolume(volume)
-                else:
-                    self.isPlaying.setVolume(volume)
-                return
-            if "up" in transcript:
-                self.play("VolumeUp")
-                self.isPlaying.volumeUp(volume)
-            elif "down" in transcript:
-                self.play("VolumeDown")
-                self.isPlaying.volumeDown(volume)
-            else:
-                return -1
-
-        if changeVolume() == -1:
+        if "up" in transcript:
+            if volume == -1:
+                volume = 2
+            self.play("VolumeUp")
+            self.isPlaying.volumeUp(volume)
+        elif "down" in transcript:
+            if volume == -1:
+                volume = 2
+            self.play("VolumeDown")
+            self.isPlaying.volumeDown(volume)
+        elif volume != -1:
+            if volume == -1:
+                volume = 2
+            self.isPlaying.setVolume(volume)
+        else:
             self.play("VolumeUpOrDown")
             self.isResponding = 1
             transcript = self.record().lower()
-            splitTranscript = transcript.split()
-            return changeVolume()
+            if "up" in transcript:
+                self.isPlaying.volumeUp(volume)
+            elif "down" in transcript:
+                self.isPlaying.volumeDown(volume)
+            else:
+                return -1
 
     elif "skip" in transcript:
         playDing(self)
@@ -416,8 +413,11 @@ def parse(self, transcript):
             temp = str(firstNume) + str(secondNum) + str(thirdNum)
             temp = int(temp)
         self.setOven(temp)
+    elif "control" in transcript and "roku" in transcript:
+        playDingDelay(self)
+        self.roku.rokuControl()
 
-    elif "never mind" in transcript:
+    elif "never mind" in transcript or "nevermind" in transcript:
         return
 
     elif "exit" in transcript:
