@@ -1,9 +1,19 @@
 import datetime as dt
+from dateutil import parser
+from word2number import w2n
 
 daysArray =["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 numWords = {"mute": 0, "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, 
             "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
             "eleven": 11, "twelve": 12}
+ordinalDict = {"first": 1 , "second": 2, "third": 3, "fourth": 4, "fifth": 5, "sixth": 6,
+               "seventh": 7, "eighth": 8, "ninth": 9, "tenth": 10, "eleventh": 11, "twelth": 12,
+               "thirteenth": 13, "fourteenth": 14, "fifteenth": 15, "sixteenth": 16, "seventeenth": 17,
+               "eighteenth": 18, "nineteenth": 19, "twentieth": 20, "twenty-first": 21, "twenty-second": 22,
+               "twenty-third": 23, "twenty-fourth": 24, "twenty-fifth": 25, "twenty-sixth": 26, "twenty-seventh": 27,
+               "twenty-eighth": 28, "twenty-ninth": 29, "thirtieth": 30, "thirty-first": 31}
+monthsArray = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+
 
 #Returns the number of days to add to the current day to get to the target day
 def getTargetDay(day="today"):
@@ -106,3 +116,15 @@ def wordToNum(word):
             return word
         except:
             return -1
+
+def getDateTime(transcript):
+    transcript = transcript.split()
+
+    for x in range(len(transcript)):
+        #if transcr
+        try:
+            transcript[x] = ordinalDict[transcript[x]]
+        except:
+            continue
+    
+

@@ -414,7 +414,7 @@ def parse(self, transcript):
             temp = int(temp)
         self.setOven(temp)
     elif "control" in transcript and "roku" in transcript:
-        playDingDelay(self)
+        playDing(self)
         self.roku.rokuControl()
 
     elif "never mind" in transcript or "nevermind" in transcript:

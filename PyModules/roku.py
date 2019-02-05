@@ -9,6 +9,7 @@ from six.moves import queue
 import requests
 import xml.etree.ElementTree as ET
 import time
+from threading import Thread
 
 class Roku:
     def __init__(self, anton="", ip="192.168.1.75", port="8060", volume=15):
@@ -53,14 +54,18 @@ class Roku:
             time.sleep(.2)
 
     def launchApp(self, name="", id=""):
-        if not self.isOn:
-            self.power()
-            time.sleep(5)
-        if id != "":
-            requests.post(self.url+"launch/"+id)
-        else:
-            name = name.lower()
-            requests.post(self.url+"launch/"+self.appIDs[name])
+        name = name.lower()
+        def launch():
+            if not self.isOn:
+                self.power()
+                time.sleep(5)
+            if id != "":
+                requests.post(self.url+"launch/"+id)
+            else:
+                requests.post(self.url+"launch/"+self.appIDs[name])
+        thread = Thread(target=launch)
+        thread.daemon = True
+        thread.start()
 
     def playShowNetflix(self, show, channel="hulu"):
         self.launchApp("netflix")

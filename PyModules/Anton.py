@@ -32,7 +32,7 @@ class Anton:
         self.isMuted = 0
         self.bellsOff = 0
         self.isResponding = 0
-        self.recordingInfo = {"minRMS": 1000000, "length": 8, "samplerate": 48000,
+        self.recordingInfo = {"minRMS": 10000000, "length": 8, "samplerate": 48000,
                               "channels": 1, "width": 2, "chunk": 1024, "tempFileName": "temp.wav"}
         self.filePaths = {"dong": "/home/pi/Anton/Sounds/dong.wav", "ding": "/home/pi/Anton/Sounds/ding.wav"}
         if self.verbose:
