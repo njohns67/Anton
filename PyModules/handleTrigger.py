@@ -14,7 +14,7 @@ client = speech.SpeechClient()
 filename = "temp.wav"
 
 def getAverageRMS(self):
-    time.sleep(5)
+    time.sleep(3)
     p = pyaudio.PyAudio()
     stream = p.open(rate=self.recordingInfo["samplerate"], 
                     format=p.get_format_from_width(self.recordingInfo["width"]), 
@@ -31,7 +31,7 @@ def getAverageRMS(self):
             rmsData.append(rms)
             if len(rmsData) > 100:
                 averageRms = int(sum(rmsData)/len(rmsData))
-                self.recordingInfo["minRMS"] = int(averageRms * 1.1)
+                self.recordingInfo["minRMS"] = int(averageRms * 1.15)
             if len(rmsData) > 1000:
                 rmsData = []
         if self.isRecording:

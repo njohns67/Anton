@@ -10,6 +10,8 @@ import requests
 import xml.etree.ElementTree as ET
 import time
 from threading import Thread
+import subprocess
+from word2number import w2n
 
 class Roku:
     def __init__(self, anton="", ip="192.168.1.75", port="8060", volume=15):
@@ -194,6 +196,7 @@ class Roku:
 
         def listen_print_loop(responses):
             num_chars_printed = 0
+            prevKey = None
             for response in responses:
                 if not response.results:
                         continue
@@ -207,21 +210,37 @@ class Roku:
                     transcript += " down right"
                 if "what" in transcript: 
                     transcript += " left"
+                if "to" in transcript:
+                    transcript += " two"
                 transcript = transcript.lower().split()
                 overwrite_chars = ' ' * (num_chars_printed - len(transcript))
                 if not result.is_final:
                     for word in transcript:
+                        if prevKey != None:
+                            try: 
+                                num = w2n.word_to_num(word)
+                                self.pressKey(prevKey, num=num-1)
+                                prevKey = None
+                            except Exception as e:
+                                print(e)
+                                continue
                         if word in commands and commands[word]:
                             self.pressKey(word)
+                            prevKey = word
                             commands[word] = False
                     sys.stdout.write(" ".join(transcript) + " ")
                     sys.stdout.flush()
                     num_chars_printed = len(transcript)
                 else:
+                    prevKey = None
                     for key in commands:
                         if key in transcript and commands[key]:
                             self.pressKey(key)
                         commands[key] = True
+                    if "type" in transcript:
+                        typeIndex = transcript.index("type")
+                        stringToSend = " ".join((transcript[typeIndex+1:]))
+                        self.sendString(stringToSend)
                     transcript2 = " ".join(transcript)
                     print("Final ", transcript2 + overwrite_chars)
                     if re.search(r'\b(exit|quit)\b', transcript2, re.I):
@@ -241,6 +260,8 @@ class Roku:
                 config=config,
                 interim_results=True)
             self.anton.play("EnterRokuControlMode")
+            proc = subprocess.Popen(["play", self.anton.filePaths["dong"]], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.anton.processes.append(proc)
             with MicrophoneStream(RATE, CHUNK) as stream:
                 audio_generator = stream.generator()
                 requests = (types.StreamingRecognizeRequest(audio_content=content)
@@ -249,5 +270,6 @@ class Roku:
                 listen_print_loop(responses)
         try:
             start()
-        except:
+        except Exception as e:
+            print(e)
             self.anton.play("ExitRokuControlMode")
