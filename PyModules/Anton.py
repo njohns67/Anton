@@ -82,12 +82,15 @@ class Anton:
                 f.write("Bad transcript\n")
             print("Something went wrong")
             pass       #Idk maybe do something with this later it's currently handled in parseTranscript()
-        if self.continuePlaying:
+        if self.continuePlaying and self.continuePlaying != self.roku:
             self.isPlaying.play()
         self.lightOff()
 
     def feedScout(self):
-        wifiDevices.feedScout()
+        try:
+            wifiDevices.feedScout()
+        except:
+            print("Couldn't feed Scout")
 
     def beerMe(self):
         wifiDevices.beerMe()
@@ -155,3 +158,22 @@ class Anton:
                    self.processes.remove(x)
                print(x.stdout.read().decode())
                print(x.stderr.read().decode())
+
+    def setIsPlaying(self):
+        if any(x in self.command.transcript for x in ["tv", "t.v.", "television", "hulu", "netflix"]):
+            self.isPlaying = self.roku
+        elif "music" in transcript:
+            self.isPlaying = self.mpc
+        elif "pandora" in transcript:
+            self.isPlaying = self.pandora
+        self.play("WhatPlay")
+        self.isResponding = 1
+        transcript = self.record()
+        print(transcript)
+        transcript = transcript.lower()
+        if any(x in transcript for x in ["tv", "t.v.", "television", "hulu", "netflix"]):
+            self.isPlaying = self.roku
+        elif "music" in transcript:
+            self.isPlaying = self.mpc
+        elif "pandora" in transcript:
+            self.isPlaying = self.pandora

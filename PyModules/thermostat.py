@@ -12,7 +12,7 @@ class Thermostat:           #Mode 1 for cool, 2 for heat
         self.mode = mode
 
     def changeModeDelay(self, wallTime, mode):
-        wallTimeime = mf.subtractTimes(wallTimeime)
+        wallTime = mf.subtractTimes(wallTime)
         def countdown():
             print("Sleeping")
             time.sleep(wallTime)
