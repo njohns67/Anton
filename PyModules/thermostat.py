@@ -6,7 +6,7 @@ import miscFunctions as mf
 
 
 class Thermostat:           #Mode 1 for cool, 2 for heat
-    def __init__(self, anton, temp=70, mode=1):
+    def __init__(self, anton, temp=70, mode=2):
         self.anton = anton
         self.temp = temp
         self.mode = mode
@@ -22,7 +22,7 @@ class Thermostat:           #Mode 1 for cool, 2 for heat
         thread.daemon = True
         thread.start()
 
-    def changeMode(self, mode):
+    def changeMode(self, mode=(not self.mode)):
         wifiDevices.changeThermostatMode(mode)
         self.mode = mode
 

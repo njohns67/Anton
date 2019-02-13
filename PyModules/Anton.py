@@ -23,7 +23,7 @@ class Anton:
         self.thermostat = Thermostat(self)
         pr.set_brightness(100)
         self.isRecording = 0
-        self.isPlaying = None
+        self.isPlaying = self.roku
         self.continuePlaying = 0
         self.isDead = 0
         self.debug = debug
