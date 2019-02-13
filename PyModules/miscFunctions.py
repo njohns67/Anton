@@ -12,7 +12,7 @@ ordinalDict = {"first": 1 , "second": 2, "third": 3, "fourth": 4, "fifth": 5, "s
                "eighteenth": 18, "nineteenth": 19, "twentieth": 20, "twenty-first": 21, "twenty-second": 22,
                "twenty-third": 23, "twenty-fourth": 24, "twenty-fifth": 25, "twenty-sixth": 26, "twenty-seventh": 27,
                "twenty-eighth": 28, "twenty-ninth": 29, "thirtieth": 30, "thirty-first": 31}
-monthsArray = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+monthsDict = {"january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6, "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12}
 
 
 #Returns the number of days to add to the current day to get to the target day
@@ -48,74 +48,130 @@ def subtractTimes(time):
     print(str(int(diff)))
     return diff
 
-def speechToTime(transcript):
+def speechToDate(transcript):
     transcript = transcript.split()
-    hour = 0
-    minute = 0
-    second = 0
+    addHour = 0
+    addMinute = 0
+    addSecond = 0
+    hour = dt.datetime.now().hour
+    minute = dt.datetime.now().minute
+    second = dt.datetime.now().second
+    day = dt.datetime.now().day
+    month = dt.datetime.now().month
+    year = dt.datetime.now().year
+    print(type(second))
+    print(type(day))
     if "at" in transcript:
         atIndex = transcript.index("at")
         if ':' in transcript[atIndex+1]:
             cIndex = transcript[atIndex+1].index(':')
             hour = transcript[atIndex+1][:cIndex]
             minute = transcript[atIndex+1][cIndex+1:]
-        elif len(transcript[atIndex+1]) == 3:
+        elif len(transcript[atIndex+1]) == 3 and len(str(wordToNum(transcript[atIndex+1]))) != 3:
             hour = transcript[atIndex+1][0]
             minute = transcript[atIndex+1][1:]
-        elif len(transcript[atIndex+1]) == 4:
+        elif len(transcript[atIndex+1]) == 4 and len(str(wordToNum(transcript[atIndex+1]))) != 4:
             hour = transcript[atIndex+1][:2]
             minute = transcript[atIndex+1][2:]
         else:
             hour = transcript[atIndex+1]
+            if wordToNum(transcript[atIndex+2]) != -1:
+                minute = wordToNum(transcript[atIndex+2])
+            else:
+                minute = 0
         hour = wordToNum(hour)
         minute = wordToNum(minute)
-        second = wordToNum(second)
+        second = 0
         if "am" in transcript or "a.m." in transcript:
             if hour > 12:
                 hour -= 12
         elif hour < 12:
             hour += 12
-        time = dt.time(hour=hour, minute=minute, second=second)
-        time = dt.datetime.combine(dt.datetime.now(), time)
     elif "in" in transcript:
         for x in range(len(transcript)):
             if transcript[x] == "hour" or transcript[x] == "hours":
-                hour = transcript[x-1]
+                addHour = transcript[x-1]
             elif transcript[x] == "minute" or transcript[x] == "minutes":
-                minute = transcript[x-1]
+                addMinute = transcript[x-1]
             elif transcript[x] == "second" or transcript[x] == "seconds":
-                second = transcript[x-1]
-        hour = wordToNum(hour)
-        minute = wordToNum(minute)
-        second = wordToNum(second)
-        time = dt.datetime.now() + dt.timedelta(hours=hour, minutes=minute, seconds=second)
-    if "tomorrow" in transcript:
-        time += dt.timedelta(days=1)
-        return time
-    dayIndex = -1
-    for day in daysArray:
-        try:
-            dayIndex = transcript.index(day)
+                addSecond = transcript[x-1]
+        hour += wordToNum(addHour)
+        minute += wordToNum(addMinute)
+        second += wordToNum(addSecond)
+    if "on" in transcript:
+        ons = [i for i, hit in enumerate(transcript) if hit == "on"]
+        for onIndex in ons:
+            if transcript[onIndex+1] in monthsDict:
+                month = monthsDict[transcript[onIndex+1]]
+                day = transcript[onIndex+2]
+                day = wordToNum(day)
+            elif transcript[onIndex+1] == "the" and wordToNum(transcript[onIndex+2]) != -1:
+                day = wordToNum(transcript[onIndex+2])
+                month = monthsDict[transcript[onIndex+4]]
+    if second > 60:
+        minute += 1
+        second -= 60
+    if minute > 60:
+        hour += 1
+        minute -= 60
+    if hour > 23:
+        hour = 0
+        day += 1
+    print(second)
+    print(minute)
+    print(hour)
+    print(day)
+    print(month)
+    print(year)
+    try:
+        date = dt.datetime(day=day, month=month, year=year, hour=hour, minute=minute, second=second)
+    except: 
+        day = 1
+        month += 1
+        try: 
+            date = dt.datetime(day=day, month=month, year=year, hour=hour, minute=minute, second=second)
         except:
-            continue
-    if dayIndex == -1:
-        return time
-    addDays = getTargetDay(daysArray[dayIndex])
-    time += dt.timedelta(days=addDays)
-    return time
+            month = 1
+            year += 1
+            date = dt.datetime(day=day, month=month, year=year, hour=hour, minute=minute, second=second)
+    if "tomorrow" in transcript:
+        date += dt.timedelta(days=1)
+        return date
+    day = -1
+    for word in transcript:
+        if word in daysArray:
+            day = word
+    if day == -1:
+        if dt.datetime.now() > date:
+            return 0
+        return date
+    addDays = getTargetDay(day)
+    date += dt.timedelta(days=addDays)
+    if dt.datetime.now() > date:
+        return 0
+    return date
 
 def wordToNum(word):
-    if isinstance(word, int):
-        return word
     try:
-        word = int(word)
-        return word
+        return int(word)
     except:
-        try:
-            word = numWords[word]
-            return word
-        except:
-            return -1
+        pass
+    try:
+        return numWords[word]
+    except:
+        pass
+    try:
+        return ordinalDict[word]
+    except:
+        pass
+    try:
+        return w2n.word_to_num(word)
+    except:
+        pass
+    try:
+        return w2n.word_to_num(word[:-2])
+    except:
+        return -1
 
 def getDateTime(transcript):
     transcript = transcript.split()

@@ -29,7 +29,11 @@ class Roku:
                                ['e', 'k', 'q', 'w', '3', '9'],
                                ['f', 'l', 'r', 'x', '4', '0']]
         self.appIDs = {}
-        response = requests.get(self.url+"query/apps").text
+        try:
+            response = requests.get(self.url+"query/apps").text
+        except:
+            print("Roku not available")
+            return
         root = ET.fromstring(response)
         for child in root:
             id = child.get("id")

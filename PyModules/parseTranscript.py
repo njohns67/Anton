@@ -31,6 +31,10 @@ def playDing(self):
 
 def parse(self, transcript):
     transcript = transcript.lower()
+    with open("log.txt", "a") as f:
+        f.write(transcript)
+    date = mf.speechToDate(transcript)
+    print(date)
     splitTranscript = transcript.split()
     if "joke" in transcript:
         playDingDelay(self)
@@ -108,7 +112,7 @@ def parse(self, transcript):
             self.play("BadRec")
         self.tts("I've set your timer for" + playString)
 
-    elif "play" in transcript or "pray" in transcript or "playing" in transcript:
+    elif "play" in splitTranscript or "pray" in splitTranscript or "playing" in transcript:
         if (len(splitTranscript) < 4 and "continue" in transcript) or "play the music" == transcript or "continue playing" in transcript or "play" == transcript:
             print("resuming")
             self.continuePlaying = 1
@@ -377,18 +381,23 @@ def parse(self, transcript):
         self.roku.sendString(s)
 
     elif "heat" in transcript and "on" in transcript:
+        playDing(self)
         if "in" in splitTranscript or "at" in splitTranscript:
-            t = mf.speechToTime(transcript)
+            t = mf.speechToDate(transcript)
+            print(t)
             self.thermostat.changeModeDelay(t, 2)
             return
+        self.play("HeatOn")
         self.thermostat.changeMode(2)
 
     elif "ac" in transcript and "on" in transcript:
+        playDing(self)
         if "in" in splitTranscript or "at" in splitTranscript:
-            t = mf.speechToTime(transcript)
+            t = mf.speechToDate(transcript)
             print(t)
             self.thermostat.changeModeDelay(t, 1)
             return
+        self.play("ACOn")
         self.thermostat.changeMode(1)
 
     elif "oven" in transcript:
