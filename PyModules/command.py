@@ -26,6 +26,13 @@ class Command:
                          "heat": self.anton.thermostat.changeMode, "ac": self.anton.thermostat.changeMode, 
                          "oven": self.ovenControl, "control": self.anton.roku.rokuControl, 
                          "roku": self.anton.roku.rokuControl, "nevermind": self.ret, "exit", self.exit}
+        self.instantCommands = {"feed": wifiDevices.feedScout, "scout": wifiDevices.feedScout, "joke": APICalls.playJoke, "skip": self.anton.isPlaying.skipSong, 
+                                "beer": wifiDevices.beerMe, "previous": self.anton.isPlaying.previousSong, "go back": self.anton.isPlaying.previousSong,
+                                "control": self.anton.rokuControl, "nevermind": self.ret, "never mind": self.ret, "exit": self.exit}
+        self.mediaCommands = ["volume", "play", "roku", "control", "watch", "launch", "type", "pause", "pray",
+                              "unmute", "un-mute", "tv", "open"]
+        self.parsingCommands = ["weather": self.getWeather]
+
         self.args = []
         self.command()
 
