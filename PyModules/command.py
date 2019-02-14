@@ -12,7 +12,7 @@ class Command:
 		self.nums = []
 		self.weatherDayArray = ["monday", "tuesday", "wednesday", "thursday", "friday", 
 								"saturday", "sunday", "today", "tomorrow"]
-		self.command = None
+		self.command = self.ret
 		self.args = []
 		self.commands = {"feed": wifiDevices.feedScout, "scout": wifiDevices.feedScout, 
 						 "joke": APICalls.playJoke, "weather": self.getWeather, "pause": self.pauseMedia, 
@@ -28,27 +28,45 @@ class Command:
 						 "a/c": self.anton.thermostat.changeMode,"oven": self.ovenControl, 
 						 "control": self.anton.roku.rokuControl, "roku": self.anton.roku.rokuControl,
 						 "nevermind": self.ret, "never-mind": self.ret, "exit": self.exit}
-
-		self.commandStatus = (self.setCommand())()
-		if self.commandStatus == 2:
-			self.command(*self.args)
+		
+		self.dingDelays =  {"feed": False, "scout": False, 
+							"joke": True, "weather": True, "pause": False, 
+							"play": False, "skip": False, "volume": False,
+							"beer": False, "alarm": False, "reminder": False, 
+							"timer": False, "remind": False, "calendar": False, 
+							"pray": True, "go back": False, 
+							"previous": False, "mute": False,
+							"unmute": False, "un-mute": False, 
+							"silent": False, "tv": False, "launch": True, 
+							"open": True, "watch": True, "type": True, 
+							"heat": False, "ac": False, 
+							"a/c": False,"oven": True, 
+							"control": False, "roku": False,
+							"nevermind": True, "never-mind": True, "exit": False}
+		
+		self.command = self.setCommand()
+		if self.delayCommand and "weather" not in transcript:
+			self.threadCommand()
+			return 
 		else:
-			return self.commandStatus
+			return self.command()
 
 	def setCommand(self):
 		for word in self.transcript.split():
 			try:
-				return self.commands[word]
+				command = self.commands[word]
+				self.playDing(dingDelays[word])
+				return command
 			except:
 				continue
 		return self.commands["nevermind"]
 
 	def setInfo(self):
-		if "on" in self.transcript:
+		if "on" in self.splitTranscript:
 			self.on = 1
-		if "off" in self.transcript:
+		if "off" in self.splitTranscript:
 			self.on = 0
-		elif "off" not in self.transcript and "on" not in self.transcript:
+		elif "off" not in self.splitTranscript and "on" not in self.splitTranscript:
 			self.on = None
 		date = mf.speechToDate(self.transcript)
 		if date:
@@ -61,14 +79,21 @@ class Command:
 			self.delaySeconds = 0
 		self.nums.append(mf.wordToNum(word) for word in self.transcript.split() if mf.wordToNum(word) != -1) 
 
-	def delayCommand(self):
-		thread = Thread(target=self.threadCommand)
+	def threadCommand(self):
+		def delayCommand():
+			time.sleep(self.delay)
+			self.command(*self.args)
+		thread = Thread(target=delayCommand)
 		thread.daemon = True
 		thread.start()
 
-	def threadCommand(self):
-		time.sleep(self.delay)
-		self.command(*self.args)
+	def playDing(self, delay=False):
+		if not self.bellsOff:
+			p = Popen(["play", self.anton.filePaths["ding"]], stdout=PIPE, stderr=PIPE)
+			if delay:
+				self.anton.processes.append(p)
+			else:
+				p.wait()
 
 	def getWeather(self):
 		city = ""
@@ -98,18 +123,20 @@ class Command:
 		except ValueError:
 			city = ""
 		print(city)
-		self.getForecast(city, day)
-		pass
+		APICalls.getForecast(city, day)
+		return
 
 	def pauseMedia(self):
-		pass
+		if self.anton.isPlaying == self.anton.roku:
+			self.anton.continuePlaying = 0
+			self.anton.isPlaying.pause()
+		else:
+			self.anton.continuePlaying = 0
 	
 	def playMedia(self):
 		if (len(self.self.splitTranscript) < 4 and "continue" in self.transcript) or "play the music" == self.transcript or "continue playing" in self.transcript or "play" == self.transcript:
 			print("resuming")
 			self.anton.continuePlaying = 1
-			if self.anton.isPlaying == None:
-				self.anton.setIsPlaying()
 			return
 		if any(x in self.transcript for x in ["netflix", "hulu", "amazon", "prime"]):
 			if "on" not in self.transcript:
@@ -128,7 +155,7 @@ class Command:
 					season = int(season)
 				except:
 					season = numWords[season]
-				self.tts("Playing " + show + " season " + str(season) + " on " + channel)
+				self.anton.tts("Playing " + show + " season " + str(season) + " on " + channel)
 				self.anton.roku.playShow(show=show, channel=channel, season=season)
 				return
 			self.anton.tts("Playing " + show + " on " + channel)
@@ -209,25 +236,95 @@ class Command:
 				return
 
 	def muteMedia(self):
-		pass
+		if "mode" in self.splitTranscript:
+			if "on" in self.splitTranscript:
+				self.anton.changeMuteMode(True)
+			elif "off" in self.splitTranscript:
+				self.anton.changeMuteMode(False)
+		else:
+			self.anton.isPlaying.mute()
 
 	def unMuteMedia(self):
-		pass
+		if "mode" in self.splitTranscript:
+			self.anton.chamgeMuteMode(False)
+		else:
+			self.anton.isPlaying.unMute()
+	
+	def changeVolume(self):
+		volume = -1
+		for word in splitTranscript:
+			volume = mf.wordToNum(word)
+			if volume != -1:
+				break
+		if "up" in transcript:
+			if volume == -1:
+				volume = 2
+			self.anton.play("VolumeUp")
+			self.anton.isPlaying.volumeUp(volume)
+		elif "down" in transcript:
+			if volume == -1:
+				volume = 2
+			self.anton.play("VolumeDown")
+			self.anton.isPlaying.volumeDown(volume)
+		elif volume != -1:
+			if volume == -1:
+				volume = 2
+			self.anton.isPlaying.setVolume(volume)
+		else:
+			self.anton.play("VolumeUpOrDown")
+			self.anton.isResponding = 1
+			transcript = self.anton.record().lower()
+			if "up" in transcript:
+				self.anton.isPlaying.volumeUp(volume)
+			elif "down" in transcript:
+				self.anton.isPlaying.volumeDown(volume)
+			else:
+				return -1
 
 	def launchApp(self):
-		pass
+		if "hulu" in self.splitTranscript:
+			self.anton.roku.launchApp("hulu")
+		elif "netflix" in self.splitTranscript:
+			self.anton.roku.launchApp("netflix")
 	
 	def typeString(self):
-		pass
+		s = self.splitTranscript[1:]
+		s = " ".join(s)
+		self.anton.roku.sendString(s)
 
 	def ovenControl(self):
-		pass
+		if "off" in self.splitTranscript:
+			self.setOven(0)
+			return
+		temp = 0
+		for word in self.splitTranscript:
+			try:
+				temp = int(word)
+			except:
+				continue
+		if temp == 0:
+			try:
+				toIndex = self.splitTranscript.index("to")
+			except:
+				return -1
+			firstNum = numWords[self.splitTranscript[toIndex+1]]
+			secondNum = numWords[self.splitTranscript[toIndex+2]]
+			thirdNum = numWords[self.splitTranscript[toIndex+3]]
+			temp = str(firstNume) + str(secondNum) + str(thirdNum)
+			temp = int(temp)
+		self.anton.setOven(temp)
+
 
 	def ret(self):
 		return
 
 	def exit(self):
-		pass
+		self.anton.play("Goodbye")
+		for x in self.anton.processes:
+			x.send_signal(signal.SIGINT)
+			x.wait()
+		os.system("stty sane")
+		exit(0)
 
 
 
