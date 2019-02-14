@@ -62,10 +62,12 @@ class Anton:
 	def getForecast(self, city="Menomonee Falls", day="today"):
 		APICalls.getForecast(self, city, day)
 
-	def askQuestion(self, question):
+	def askQuestion(self, question):			#Future development needed; not used
 		return APICalls.askQuestion(self, question)
 
 	def record(self):
+		'''Records a transcript and checks the return status of the transcript.
+		This function is mostly used for handling playback after pausing for transcription'''
 		self.isRecording = 1
 		if self.isPlaying != None and self.isPlaying != self.roku:
 			self.isPlaying.pause()
@@ -92,6 +94,12 @@ class Anton:
 		self.lightOff()
 
 	def speechToText(anton):
+		'''Copied straight from google's documentation. Slightly modified.
+		When a transcript's "is_final" variable is True then a Command class 
+		is created and the transcript is passed to it. If the Command's __init__
+		returns -1 then the transcript did not contain a keyword and the function
+		continues listening for another transcript. A max of 2 transcripts will
+		be recorded before exiting'''
 		RATE = 48000
 		CHUNK = 1024 
 		count = 0

@@ -2,13 +2,20 @@ import miscFunctions as mf
 import time
 
 class Command:
+	'''When a command class is instantiated the process is as follows: 
+	The class first checks to make sure that the passed transcript contains one of the keywords
+	needed to activate a function. If there isn't a keyword -1 is returned. When a keyword is found, 
+	the class automatically parses the transcript and sets various info that might be needed later (dates,
+	times, delay, etc). The command is then called and if it is a local command, this means more parsing
+	is needed before calling a module command'''
+
 	def __init__(self, anton, transcript):
 		self.anton = anton
 		self.transcript = transcript
 		self.splitTranscript = self.transcript.split()
 		self.date = mf.speechToDate(self.transcript)
 		self.delayCommand = False
-		self.delaySeconds = mf.subtractTimes(time)
+		self.delaySeconds = 0
 		self.nums = []
 		self.weatherDayArray = ["monday", "tuesday", "wednesday", "thursday", "friday", 
 								"saturday", "sunday", "today", "tomorrow"]
@@ -31,6 +38,7 @@ class Command:
 						 "nevermind": [self.ret, False], "never-mind": [self.ret, False], "exit": [self.exit, False]}
 		
 		self.command = self.setCommand()
+		setInfo()
 		if self.command == -1:
 			return -1
 		if self.delayCommand and "weather" not in transcript:
@@ -40,6 +48,7 @@ class Command:
 			return self.command()
 
 	def setCommand(self):
+		'''Returns the function associated with a keyword'''
 		for word in self.transcript.split():
 			try:
 				command = self.commands[word][0]
@@ -50,7 +59,9 @@ class Command:
 				continue
 		return -1
 
+
 	def setInfo(self):
+		'''Sets various information variables'''
 		if "on" in self.splitTranscript:
 			self.on = 1
 		if "off" in self.splitTranscript:
