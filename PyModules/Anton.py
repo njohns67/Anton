@@ -10,6 +10,7 @@ from roku import Roku
 from mpc import MPC
 from pandora import Pandora
 from thermostat import Thermostat
+from command import Command
 import re, sys
 from google.cloud import speech
 from google.cloud.speech import enums

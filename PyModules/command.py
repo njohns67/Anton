@@ -14,35 +14,21 @@ class Command:
 								"saturday", "sunday", "today", "tomorrow"]
 		self.command = self.ret
 		self.args = []
-		self.commands = {"feed": wifiDevices.feedScout, "scout": wifiDevices.feedScout, 
-						 "joke": APICalls.playJoke, "weather": self.getWeather, "pause": self.pauseMedia, 
-						 "play": self.playMedia, "skip": self.anton.isPlaying.skipSong, "volume": self.changeVolume,
-						 "beer": wifiDevices.beerMe, "alarm": self.createAlarm, "reminder": self.createAlarm, 
-						 "timer": self.createAlarm, "remind": self.createAlarm, "calendar": self.createAlarm, 
-						 "pray": self.playMedia, "go back": self.anton.isPlaying.previousSong, 
-						 "previous": self.anton.isPlaying.previousSong, "mute": self.muteMedia,
-						 "unmute": self.unMuteMedia, "un-mute": self.unMuteMedia, 
-						 "silent": self.anton.changeMuteMode, "tv": self.anton.roku.rokuControl, "launch": self.launchApp, 
-						 "open": self.launchApp, "watch": self.launchApp, "type": self.typeString, 
-						 "heat": self.anton.thermostat.changeMode, "ac": self.anton.thermostat.changeMode, 
-						 "a/c": self.anton.thermostat.changeMode,"oven": self.ovenControl, 
-						 "control": self.anton.roku.rokuControl, "roku": self.anton.roku.rokuControl,
-						 "nevermind": self.ret, "never-mind": self.ret, "exit": self.exit}
-		
-		self.dingDelays =  {"feed": False, "scout": False, 
-							"joke": True, "weather": True, "pause": False, 
-							"play": False, "skip": False, "volume": False,
-							"beer": False, "alarm": False, "reminder": False, 
-							"timer": False, "remind": False, "calendar": False, 
-							"pray": True, "go back": False, 
-							"previous": False, "mute": False,
-							"unmute": False, "un-mute": False, 
-							"silent": False, "tv": False, "launch": True, 
-							"open": True, "watch": True, "type": True, 
-							"heat": False, "ac": False, 
-							"a/c": False,"oven": True, 
-							"control": False, "roku": False,
-							"nevermind": True, "never-mind": True, "exit": False}
+		#Index 0 returns the function associated with a keyword, index 1 returns whether or not to play the ding on a separate thread
+		self.commands = {"feed": [wifiDevices.feedScout, False], "scout": [wifiDevices.feedScout, False], 
+						 "joke": [APICalls.playJoke, True], "weather": [self.getWeather, True], "pause": [self.pauseMedia, False], 
+						 "play": [self.playMedia, False], "skip": [self.anton.isPlaying.skipSong, False], "volume": [self.changeVolume, False],
+						 "beer": [wifiDevices.beerMe, False], "alarm": [self.createAlarm, False], "reminder": [self.createAlarm, False],
+						 "timer": [self.createAlarm, False], "remind": [self.createAlarm, False], "calendar": [self.createAlarm, False], 
+						 "pray": [self.playMedia, False], "go back": [self.anton.isPlaying.previousSong, False], 
+						 "previous": [self.anton.isPlaying.previousSong, False], "mute": [self.muteMedia, False],
+						 "unmute": [self.unMuteMedia, False], "un-mute": [self.unMuteMedia, False],
+						 "silent": [self.anton.changeMuteMode, False], "tv": [self.anton.roku.rokuControl, False], "launch": [self.launchApp, True],
+						 "open": [self.launchApp, True], "watch": [self.launchApp, True], "type": [self.typeString, True], 
+						 "heat": [self.anton.thermostat.changeMode, False], "ac": [self.anton.thermostat.changeMode, False],
+						 "a/c": [self.anton.thermostat.changeMode, False], "oven": [self.ovenControl, True],
+						 "control": [self.anton.roku.rokuControl, False], "roku": [self.anton.roku.rokuControl, False],
+						 "nevermind": [self.ret, False], "never-mind": [self.ret, False], "exit": [self.exit, False]}
 		
 		self.command = self.setCommand()
 		if self.command == -1:
@@ -56,8 +42,8 @@ class Command:
 	def setCommand(self):
 		for word in self.transcript.split():
 			try:
-				command = self.commands[word]
-				self.playDing(dingDelays[word])
+				command = self.commands[word][0]
+				self.playDing(self.commands[word][1])
 				self.anton.lightSuccess()
 				return command
 			except:
