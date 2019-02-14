@@ -117,6 +117,8 @@ def speechToDate(transcript):
     if hour > 23:
         hour = 0
         day += 1
+	if hour < dt.datetime.now().hour and day == dt.datetime.now().day:
+		day += 1
     print(second)
     print(minute)
     print(hour)
