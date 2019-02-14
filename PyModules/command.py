@@ -45,6 +45,8 @@ class Command:
 							"nevermind": True, "never-mind": True, "exit": False}
 		
 		self.command = self.setCommand()
+		if self.command == -1:
+			return -1
 		if self.delayCommand and "weather" not in transcript:
 			self.threadCommand()
 			return 
@@ -56,10 +58,11 @@ class Command:
 			try:
 				command = self.commands[word]
 				self.playDing(dingDelays[word])
+				self.anton.lightSuccess()
 				return command
 			except:
 				continue
-		return self.commands["nevermind"]
+		return -1
 
 	def setInfo(self):
 		if "on" in self.splitTranscript:
