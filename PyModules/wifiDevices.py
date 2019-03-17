@@ -1,4 +1,7 @@
 import socket
+'''Functions for controlling devices on a wifi network, main
+ESP8266 modules attached to servos. Not very useful unless
+you've installed the necessary hardware'''
 
 def lightOn():
     IP = "192.168.1.74"

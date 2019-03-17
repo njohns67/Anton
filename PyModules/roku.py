@@ -14,6 +14,9 @@ import subprocess
 from word2number import w2n
 
 class Roku:
+    '''This class controls a roku. You must obtain the IP of your roku and pass it
+    in the constructor for this class in Anton.py for any of this to work. Port 8060
+    is default for roku device communication'''
     def __init__(self, anton="", ip="192.168.1.75", port="8060", volume=15):
         self.isOn = 0
         self.anton = anton
@@ -51,6 +54,7 @@ class Roku:
             self.isOn = 1
 
     def sendString(self, string):
+        '''Types a string on the roku. Used for things like searches'''
         for c in string:
             requests.post(self.url+"keypress/Lit_"+c)
 
@@ -73,29 +77,15 @@ class Roku:
         thread.daemon = True
         thread.start()
 
-    def playShowNetflix(self, show, channel="hulu"):
-        self.launchApp("netflix")
-        time.sleep(15)
-        self.pressKey("select")
-        self.pressKey("left")
-        self.pressKey("up")
-        self.pressKey("select")
-        self.sendString(show)
-        for x in range(0, len(self.letterPosition)):
-            if show[len(show)-1] in self.letterPosition[x]:
-                num = x
-                break
-        time.sleep(5)
-        self.pressKey("right", 6-num)
-        self.pressKey("select")
-        self.pressKey("select")
-
     def power(self):
         requests.post(self.url+"keypress/power")
         self.isOn = not self.isOn
         self.anton.isPlaying = self.anton.roku
 
     def playShow(self, show, channel="hulu", season=""):
+        '''This doesn't really work because for some reason roku's general search
+        doesn't show netflix results so you're limited to hulu and amazon. Also 
+        you can't choose a specific episode and it defaults to the latest season'''
         channel = channel.lower()
         if not self.isOn:
             self.power()
@@ -111,6 +101,8 @@ class Roku:
         self.pressKey("play")
 
     def continueHulu(self):
+        '''In theory this continues playing the last show you were watching
+        on hulu. In reality hulu changes their UI layout so much it's not functional'''
         if not self.isOn:
             self.power()
             time.sleep(15)
@@ -131,6 +123,9 @@ class Roku:
         self.pressKey("VolumeDown", num)
 
     def setVolume(self, volume):
+        '''This only really works if you exclusively use Anton to control the volume
+        on your TV. If you use the remote then Anton doesn't know what the actual current
+        volume is, just what it was before you used the remote'''
         volumeChange = volume-self.volume
         if volumeChange < 0:
             self.volumeDown(abs(volumeChange))
@@ -147,6 +142,16 @@ class Roku:
         self.mute()
 
     def rokuControl(self):
+        '''Roku control mode allows you to speak commands like "up, down, select, back" 
+        and for them to be executed like you were pressing the buttons on the remote. 
+        The caveat is that you can't repeat the same command in succession. Instead of saying
+        "down down right right select" you should say "down two right two select" or you'll
+        get some weird results. This is because of how google's live STT API returns interim
+        results. Fixing this would result in a major loss of the speed in which a button is "pressed".
+        A speech_context list is passed to the google API to ensure that words are correctly recognized.
+        Because single words are hard to convert to text (since they have no context), words like "left"
+        would be confused with "let" without this list. I also included phrase conversion to stop things 
+        like "up right" from being understood as "upright" and so forth'''
         anton = self.anton
         RATE = 48000
         CHUNK = 1024 

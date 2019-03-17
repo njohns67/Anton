@@ -14,6 +14,8 @@ def getKey():
         return key
 
 def getForecast(self, city="Menomonee Falls", day="today"):
+    '''Obtains the forecast for a given day and city from openweathermap API.
+    10 day max I think'''
     key = getKey()
     day = day.lower()
     if city == "":
@@ -22,7 +24,7 @@ def getForecast(self, city="Menomonee Falls", day="today"):
     url = base + "appid=" + key + "&q=" + city + "&units=imperial"
     response = requests.get(url)
     if(response.status_code != 200):
-        tts("I couldn't find that city")
+        tts("I couldn't find that city")    #TODO: Pre-record this repsonse
         return
     x = response.json()
     speakArr = parseWeatherResponse(x, city, day)
@@ -36,6 +38,13 @@ def getForecast(self, city="Menomonee Falls", day="today"):
         self.tts(speakRain)
 
 def parseWeatherResponse(response, city, day):
+    '''Goes through a given openweathermap API response and extracts the
+    needed data. This shouldn't have to be done but there isn't a free
+    weather API that actually does what I want (ie gives a straightfoward
+    forecast). This function is so disgusting because the API returns weather
+    data in increments of 3 hours at a time so I had to parse through each
+    segment to find the high and low. It also says whether or not it will rain.
+    Well really whether or not it will percipitate but whatever this API sucks'''
     tempMax = 0
     tempMin = 200
     startTime = 0
@@ -108,6 +117,7 @@ def parseWeatherResponse(response, city, day):
 
 
 def askQuestion(self, question):
+    '''Not used. Future development needed'''
         url = "http://api.wolframalpha.com/v2/result?"
         skyCommaArray = ["whos", "whose", "who's", "whats", "what's", "whens", "when's", "wheres", "where's", "whys", "why's", "hows", "how's"]
         payload = {"input": question, "appid": "XR36L6-RVJQRKE6LL"}
@@ -156,6 +166,7 @@ def getJoke(self):
     self.tts(joke, "delme", 1)
 
 def tts(self, TEXT, file="/home/pi/Anton/Responses/delme", PLAY=1):
+    '''Converts text to speech with google TTS API'''
     client = TTS.TextToSpeechClient()
     sinput = TTS.types.SynthesisInput(text=TEXT)
     voice = TTS.types.VoiceSelectionParams(language_code="en-US", 
@@ -168,6 +179,7 @@ def tts(self, TEXT, file="/home/pi/Anton/Responses/delme", PLAY=1):
         self.play(file, 0)
 
 def play(self, file):
+    '''Plays a given mp3 file'''
     p = Popen(["mpg123", file + ".mp3"], stdout=PIPE, stderr=PIPE)
     self.processes.append(p)
     p.wait()

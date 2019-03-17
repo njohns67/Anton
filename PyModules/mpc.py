@@ -1,6 +1,7 @@
 import os, subprocess
 
 class MPC:
+    '''This class controls spotify playback. All expected functions are available'''
     def __init__(self, anton):
         self.isPlaying = 0
         self.isRunning = 0
@@ -10,6 +11,7 @@ class MPC:
         p.wait()
 
     def findSong(self, song, artist=""):
+        '''Searches for a song and returns the closest match'''
         search = subprocess.check_output(["mpc", "search", "title", song, "artist", artist]).decode()
         search = search.split("\n")
         if len(search) < 1:
@@ -17,9 +19,11 @@ class MPC:
         return search[0]
 
     def addSong(self, songID):
+        '''Adds a song to the queue given a song ID'''
         subprocess.check_output(["mpc", "add", songID])
 
     def playSong(self, song, artist=""):
+        '''Plays a given song'''
         subprocess.check_output(["mpc", "clear"])
         song = self.findSong(song, artist)
         if song == -1:
@@ -51,6 +55,7 @@ class MPC:
         self.anton.tts("Playing " + song + " by " + artist)
 
     def play(self):
+        '''Continues playing music if music was previously playing'''
         try:
             out = subprocess.check_output(["mpc", "play"])
             out = out.split("\n")

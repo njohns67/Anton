@@ -6,6 +6,9 @@ import miscFunctions as mf
 
 
 class Thermostat:           #Mode 1 for cool, 2 for heat
+    '''This class controls the thermostat. It won't work very well for you
+    unless you rigged an ESP8266 module to a servo with an arm controlling
+    your heat/ac switch'''
     def __init__(self, anton, temp=70, mode=2):
         self.anton = anton
         self.temp = temp

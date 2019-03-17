@@ -5,6 +5,10 @@ import time
 from subprocess import Popen, PIPE
 
 class Pandora:
+    '''This is a funky class. There's only one CLI utility (pianobar) for pandora playback
+    and it isn't done using commands but having an active UI that is controlled 
+    with keystrokes. This class spawns the backend of that UI in the background
+    and passes it keystrokes for commands as if a person was sitting at the keyboard'''
     def __init__(self, anton, station=""):
         self.station = station
         self.anton = anton
@@ -17,6 +21,7 @@ class Pandora:
             pass
 
     def startPandora(self, station):
+        '''Starts up pianobar in the background'''
         self.anton.isPlaying = self.anton.pandora
         self.anton.continuePlaying = 1
         self.isRunning = 1
@@ -41,6 +46,7 @@ class Pandora:
         self.pandora.sendline(station)
 
     def sendCommand(self, command):
+        '''Sends a given keystroke to pianobar'''
         try:
             self.pandora.send(command)
             self.pandora.expect(".*")
@@ -108,6 +114,7 @@ class Pandora:
         self.station = station
         
     def requestCreate(self, station):
+        '''Not currently functional'''
         print("Request Create")
         return
         anton.tts("The station " + station + " does not exist. Would you like me to create it?")
@@ -115,6 +122,8 @@ class Pandora:
             self.createStation(station)
 
     def parseStations(self, station):
+        '''Returns the station that most closely matches a requested station. If
+        a string matching threshold of 70% is not hit then -1 is returned'''
         for s in self.stations:
             if fuzz.ratio(station, s) > .7:
                 return s
@@ -145,4 +154,5 @@ class Pandora:
         self.setVolume(self.volume)
 
     def previous(self):
+        '''Not functional or possible with pandora. Used to maintain continuity'''
         pass

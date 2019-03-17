@@ -12,7 +12,6 @@ class Command:
     the class automatically parses the transcript and sets various info that might be needed later (dates,
     times, delay, etc). The command is then called and if it is a local command, this means more parsing
     is needed before calling a module command'''
-
     def __init__(self, anton, transcript):
         sys.stdout.flush()
         self.anton = anton
@@ -71,7 +70,7 @@ class Command:
 
 
     def setInfo(self):
-        '''Sets various information variables'''
+        '''Sets various information variables such as on/off toggles, dates, times, etc.'''
         if "on" in self.splitTranscript:
             self.on = 1
         if "off" in self.splitTranscript:
@@ -106,6 +105,8 @@ class Command:
                 p.wait()
 
     def getWeather(self):
+        '''Parses through a transcript and extracts the date and city to get
+        the weather for (if possible)'''
         city = ""
         self.splitTranscript = self.transcript.split()
         day = ""
@@ -144,6 +145,7 @@ class Command:
             self.anton.continuePlaying = 0
     
     def playMedia(self):
+        '''Determines whether media should continue playing or if new media should begin'''
         if (len(self.splitTranscript) < 4 and "continue" in self.transcript) or "play the music" == self.transcript or "continue playing" in self.transcript or "play" == self.transcript:
             print("resuming")
             self.anton.continuePlaying = 1
@@ -300,6 +302,7 @@ class Command:
             self.anton.roku.launchApp("netflix")
     
     def typeString(self):
+        '''Types a string on a roku'''
         s = self.splitTranscript[1:]
         s = " ".join(s)
         self.anton.roku.sendString(s)
@@ -329,6 +332,7 @@ class Command:
         self.anton.setOven(temp)
 
     def createAlarm(self):
+        '''Future development needed'''
         pass
 
     def ret(self):

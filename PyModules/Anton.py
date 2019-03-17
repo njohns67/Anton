@@ -20,6 +20,36 @@ from six.moves import queue
 from subprocess import Popen, PIPE
 
 class Anton:
+    '''Main Anton class. 
+    General form: 
+    When a hotword is detected ("Hey Anton"), recording begins immediately. Google speech's live 
+    speech-to-text API is used and is alloted a maximum of 10 seconds to record a transcript. 
+    It will, however, detect when you end a sentence and not use the full 10 seconds. 
+    
+    This was initially done manually by me calculating the average RMS value
+    of the sound levels in the room and storing this so when a hotword was detected, a person talking 
+    would raise this value compared to the average so when the person stopped talking and the active 
+    value approached the average, Anton would know a command had been spoken. Now, Google's live STT 
+    API does this for me. 
+    
+    When a transcript has been recorded, a Command class instance is created
+    and passed the transcript. More on that in command.py. If a word in the transcript is associated
+    with a command, the command is executed after all the pertinent information is set. This is done
+    sometimes by directly calling the command if no parsing is needed, but generally a wrapper function
+    is called to do the heavy lifting and give Anton the information needed. If no keyword is found, 
+    -1 is returned allowing for another 10 seconds of listening for a transcript before Anton goes
+    back to listening for a keyword
+    
+    Anton contains instances of classes used to control various devices. Each media class contains function
+    definitions for common functions, each with the same name. This allows for Anton's isPlaying variable
+    to be a pointer to the active media's class and for all common functions to be called without having
+    to figure out what media class is active. Basically if you tell Anton to "pause", all that is needed is
+    Anton.isPlaying.pause() instead of having to determine if the TV is playing, or pandora, or spotify because
+    each of those classes all have functions named "pause". By default the TV is active. However, in the instance
+    that isPlaying does not reflect the actual active media (i.e. you use spotify so it points to an MPC class but
+    then you turn the TV on manually but Anton thinks spotify is the active media), you can simply include the
+    device you want to control in your command (pause the TV) and the variables will be adjusted and the command executed 
+    appropriately'''
     def __init__(self, debug=0, verbose=0):
         self.power = LED(5)
         self.power.on()
@@ -29,19 +59,19 @@ class Anton:
         self.thermostat = Thermostat(self)
         pr.set_brightness(100)
         self.isRecording = 0
-        self.isPlaying = self.roku
-        self.continuePlaying = 0
-        self.isDead = 0
-        self.debug = debug
-        self.verbose = verbose
-        self.processes = []
-        self.isMuted = 0
-        self.bellsOff = 0
-        self.isResponding = 0
-        self.endSTT = -1
-        self.transcriptTries = 0
-        self.transcript = ""
-        self.turnLightOff = True
+        self.isPlaying = self.roku  #Active media class variable
+        self.continuePlaying = 0    #Determines whether or not media should be paused/resume playing on/after keyword trigger
+        self.isDead = 0             #Obsolete. I think
+        self.debug = debug          #Setting command flag -d or --debug enables debug mode which allows for input via text
+        self.verbose = verbose      #Setting command flag -v or --verbose prints all thread's output
+        self.processes = []         #List of processes spawned. Not really used. Just here for posterity's sake
+        self.isMuted = 0            #Silent mode toggle. When on no bells or responses will be played
+        self.bellsOff = 0           #Mute mode. No bells will be played. TODO: Change to quiet mode
+        self.isResponding = 0       #Obsolete. Used previously to pause determining average RMS
+        self.endSTT = -1            #Timer variable for recording to timeout after 10 seconds
+        self.transcriptTries = 0    #Counter for the number of unusuable transcripts recorded for a keyword before giving up. Max of 2
+        self.transcript = ""        #Last transcript recorded
+        self.turnLightOff = True    #Allows success light to stay on for 2 seconds instead of going away instantly
         self.recordingInfo = {"minRMS": 12000000, "length": 8, "samplerate": 48000,
                               "channels": 1, "width": 2, "chunk": 1024, "tempFileName": "temp.wav"}
         self.filePaths = {"dong": "/home/pi/Anton/Sounds/dong.wav", "ding": "/home/pi/Anton/Sounds/ding.wav"}
@@ -58,6 +88,7 @@ class Anton:
         APICalls.getJoke(self)
 
     def parseTranscript(self, transcript):
+        '''Obsolete. Only kept until the refactor is fully tested'''
         if self.debug:
             return pT.parse(self, transcript)
         else:
@@ -95,6 +126,8 @@ class Anton:
         self.endRecord()
 
     def endRecord(self):
+        '''Resets variables to a pre-recorded state and continues playing music
+        if needed'''
         if self.continuePlaying and self.continuePlaying != self.roku:
             self.isPlaying.play()
         while not self.turnLightOff:
@@ -105,12 +138,13 @@ class Anton:
         self.isRecording = 0
 
     def speechToText(anton):
-        '''Copied straight from google's documentation. Slightly modified.
+        '''Copied straight from google's documentation and modified to allow for timeouts..
         When a transcript's "is_final" variable is True then a Command class 
-        is created and the transcript is passed to it. If the Command's __init__
+        is created and the transcript is passed to it. If the checkCommand()
         returns -1 then the transcript did not contain a keyword and the function
         continues listening for another transcript. A max of 2 transcripts will
-        be recorded before exiting'''
+        be recorded before exiting. A maximum of 10 seconds is alloted for recording
+        before the function will timeout'''
         RATE = 48000
         CHUNK = 1024 
         count = 0
@@ -147,8 +181,9 @@ class Anton:
                 return None, pyaudio.paContinue
 
             def generator(self):
+                '''Timeouts after 10 seconds of no transcript'''
                 while not self.closed:
-                    if self.anton.endSTT > 7:
+                    if self.anton.endSTT > 9:
                         print("Ending")
                         self.ended = True
                         self.closed = True
@@ -191,7 +226,6 @@ class Anton:
                     anton.transcriptTries += 1
                     checkValid = anton.checkTranscript(transcript)
                     if checkValid == -1 and anton.transcriptTries < 2:
-                        print("Passing")
                         sys.stdout.flush()
                         anton.endSTT = 0
                         pass
@@ -234,12 +268,14 @@ class Anton:
         wifiDevices.beerMe()
 
     def getAverageRMS(self):
+        '''Obsolete'''
         if self.debug == 1:
             return
         else:
             hT.getAverageRMS(self)
 
     def lightOn(self):
+        '''Blue light signaling hotword detected and recording'''
         def f():
             pr.set_color_delay(r=0, g=0, b=255, delay=.02)
         thread = Thread(target=f)
@@ -248,6 +284,7 @@ class Anton:
         return thread
 
     def lightSuccess(self):
+        '''Green light signaling the transcript matched a command'''
         def f():
             def g():
                 pr.set_color_delay(r=0, g=255, b=0, delay=.02)
@@ -262,6 +299,7 @@ class Anton:
         thread.start()
 
     def lightFail(self):
+        '''Red light signaling an unusuable transcript or none at all'''
         def f():
             pr.set_color(r=255, g=0, b=0)
         thread = Thread(target=f)
@@ -269,6 +307,7 @@ class Anton:
         thread.start()
 
     def lightOff(self):
+        '''Turns off the light'''
         def f():
             pr.turn_off_color_delay(delay=.02)
         thread = Thread(target=f)
@@ -276,6 +315,7 @@ class Anton:
         thread.start()
 
     def lightListening(self):
+        '''Orange light signalling roku control mode is active'''
         def f():
             pr.set_color_delay(r=255, g=132, b=0, delay=.02)
         thread = Thread(target=f)
@@ -285,15 +325,17 @@ class Anton:
     def tts(self, text, file="/home/pi/Anton/Responses/delme",  play=1):
         APICalls.tts(self, text, file, play)
 
-    def play(self, response, adddir=1):
+    def play(self, response, addDir=1):
+        '''Plays a text-to-speech response. The default directory is only added if addDir is true'''
         directory = "/home/pi/Anton/Responses/"
         if not self.isMuted:
-            if adddir:
+            if addDir:
                 APICalls.play(self, directory+response)
             else:
                 APICalls.play(self, response)
 
     def playShow(self, show, season="", channel=""):
+        '''Not functional'''
         self.roku.playShow(show=show, season=season, channel=channel)
 
     def setOven(self, temp):
@@ -304,6 +346,7 @@ class Anton:
         self.tts("Setting the oven to " + str(temp))
 
     def printSubprocessOutput(self):
+        '''Thread target for printing all output when -v is enabled'''
         while self.isDead != 1:
             for x in self.processes:
                 if x.poll() != None:
@@ -313,6 +356,7 @@ class Anton:
                 print(x.stderr.read().decode())
 
     def setIsPlaying(self):
+        '''Sets the current active media'''
         if any(x in self.command.transcript for x in ["tv", "t.v.", "television", "hulu", "netflix"]):
             self.isPlaying = self.roku
         elif "music" in transcript:
@@ -332,6 +376,7 @@ class Anton:
             self.isPlaying = self.pandora
 
     def changeMuteMode(self, mode=3):
+        '''Toggles/changes mute mode state. Will be changed to quiet mode'''
         if mode == 3:
             self.bellsOff = not self.bellsOff
         else:
@@ -343,9 +388,10 @@ class Anton:
             self.processes.append(p)
 
     def sttCountdown(self):
+        '''Timer thread for transcription timeout'''
         def f():
             self.endSTT = 0
-            while self.endSTT < 9 and self.endSTT != -1:
+            while self.endSTT < 11 and self.endSTT != -1:
                 self.endSTT += 1
                 time.sleep(1)
         thread = Thread(target=f)

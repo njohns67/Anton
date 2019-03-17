@@ -15,8 +15,10 @@ ordinalDict = {"first": 1 , "second": 2, "third": 3, "fourth": 4, "fifth": 5, "s
 monthsDict = {"january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6, "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12}
 
 
-#Returns the number of days to add to the current day to get to the target day
 def getTargetDay(day="today"):
+    '''Returns the number of days needed to add to the current day 
+    to get to the target day. I.E. if today's Wednesday and the
+    target day is Friday, it would return 2'''
     currentDay = dt.datetime.today().weekday()
     targetDay = -1
     if day == "today":
@@ -38,6 +40,7 @@ def getTargetDay(day="today"):
     return addDays
 
 def subtractTimes(time):
+    '''Gives the difference in seconds between the current time and a target time'''
     t = dt.datetime.now()
     if time.hour < t.hour and time.day == t.day:
         time += dt.timedelta(days=1)
@@ -49,6 +52,8 @@ def subtractTimes(time):
     return diff
 
 def speechToDate(transcript):
+    '''Given any string, this function will extract a date and/or time
+    from the string if there is one'''
     transcript = transcript.split()
     addHour = 0
     addMinute = 0
@@ -146,6 +151,7 @@ def speechToDate(transcript):
     return date
 
 def wordToNum(word):
+    '''Converts any given word to a number if at all possible'''
     try:
         return int(word)
     except:
@@ -168,10 +174,9 @@ def wordToNum(word):
         return -1
 
 def getDateTime(transcript):
+    '''I'm not even sure if I use this but if converts ordinals to numbers (first = 1)'''
     transcript = transcript.split()
-
     for x in range(len(transcript)):
-        #if transcr
         try:
             transcript[x] = ordinalDict[transcript[x]]
         except:
