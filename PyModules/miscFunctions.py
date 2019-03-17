@@ -54,6 +54,7 @@ def subtractTimes(time):
 def speechToDate(transcript):
     '''Given any string, this function will extract a date and/or time
     from the string if there is one'''
+    nonSplitTranscript = transcript
     transcript = transcript.split()
     addHour = 0
     addMinute = 0
@@ -64,8 +65,20 @@ def speechToDate(transcript):
     day = dt.datetime.now().day
     month = dt.datetime.now().month
     year = dt.datetime.now().year
-    if "at" in transcript:
-        atIndex = transcript.index("at")
+    if "at" in transcript or ("for" in transcript and ':' in nonSplitTranscript):
+        atIndex = 100
+        forIndex = 100
+        try:
+            atIndex = transcript.index("at")
+        except:
+            pass
+        try:
+            forIndex = transcript.index("for")
+        except:
+            pass
+        if forIndex < atIndex:
+            atIndex = forIndex
+
         if ':' in transcript[atIndex+1]:
             cIndex = transcript[atIndex+1].index(':')
             hour = transcript[atIndex+1][:cIndex]
@@ -90,7 +103,7 @@ def speechToDate(transcript):
                 hour -= 12
         elif hour < 12:
             hour += 12
-    elif "in" in transcript:
+    elif "in" in transcript or "for" in transcript:
         for x in range(len(transcript)):
             if transcript[x] == "hour" or transcript[x] == "hours":
                 addHour = transcript[x-1]
@@ -148,6 +161,7 @@ def speechToDate(transcript):
     date += dt.timedelta(days=addDays)
     if dt.datetime.now() > date:
         return 0
+    print("Date is ", date)
     return date
 
 def wordToNum(word):

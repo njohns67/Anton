@@ -6,6 +6,7 @@ import string
 from urllib.parse import quote
 from subprocess import Popen, PIPE
 import miscFunctions as mf
+import sounds
 
 
 def getKey():
@@ -165,7 +166,7 @@ def getJoke(self):
     print(joke)
     self.tts(joke, "delme", 1)
 
-def tts(self, TEXT, file="/home/pi/Anton/Responses/delme", PLAY=1):
+def tts(TEXT, file="/home/pi/Anton/Responses/delme", PLAY=1):
     '''Converts text to speech with google TTS API'''
     client = TTS.TextToSpeechClient()
     sinput = TTS.types.SynthesisInput(text=TEXT)
@@ -176,10 +177,9 @@ def tts(self, TEXT, file="/home/pi/Anton/Responses/delme", PLAY=1):
     with open(file + ".mp3", "wb") as out:
         out.write(response.audio_content)
     if PLAY == 1:
-        self.play(file, 0)
+        sounds.playMP3(file)
 
-def play(self, file):
+def play(file):
     '''Plays a given mp3 file'''
     p = Popen(["mpg123", file + ".mp3"], stdout=PIPE, stderr=PIPE)
-    self.processes.append(p)
     p.wait()

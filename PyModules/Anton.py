@@ -111,8 +111,6 @@ class Anton:
         if self.isPlaying != None and self.isPlaying != self.roku:
             self.isPlaying.pause()
         STTRet = self.speechToText()
-        print(self.transcript)
-        print(STTRet)
         if STTRet == -1:
             self.lightFail()
             with open("log.txt", "a") as f:
@@ -184,7 +182,6 @@ class Anton:
                 '''Timeouts after 10 seconds of no transcript'''
                 while not self.closed:
                     if self.anton.endSTT > 9:
-                        print("Ending")
                         self.ended = True
                         self.closed = True
                         self.anton.lightFail()
@@ -323,16 +320,16 @@ class Anton:
         thread.start()
 
     def tts(self, text, file="/home/pi/Anton/Responses/delme",  play=1):
-        APICalls.tts(self, text, file, play)
+        APICalls.tts(text, file, play)
 
     def play(self, response, addDir=1):
         '''Plays a text-to-speech response. The default directory is only added if addDir is true'''
         directory = "/home/pi/Anton/Responses/"
         if not self.isMuted:
             if addDir:
-                APICalls.play(self, directory+response)
+                APICalls.play(directory+response)
             else:
-                APICalls.play(self, response)
+                APICalls.play(response)
 
     def playShow(self, show, season="", channel=""):
         '''Not functional'''
@@ -366,7 +363,6 @@ class Anton:
         self.play("WhatPlay")
         self.isResponding = 1
         transcript = self.record()
-        print(transcript)
         transcript = transcript.lower()
         if any(x in transcript for x in ["tv", "t.v.", "television", "hulu", "netflix"]):
             self.isPlaying = self.roku

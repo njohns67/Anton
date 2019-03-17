@@ -4,6 +4,7 @@ import time
 import sys
 from subprocess import Popen, PIPE
 from threading import Thread
+from clock import Clock
 
 class Command:
     '''When a command class is instantiated the process is as follows: 
@@ -47,7 +48,7 @@ class Command:
     def execCommand(self):
         if self.command == -1:
             return -1
-        if self.delayCommand and "weather" not in self.transcript:
+        if self.delayCommand and not any(x in self.transcript for x in ["weather", "remind", "alarm", "timer", "reminder"]):
             self.threadCommand()
             return 
         else:
@@ -108,7 +109,6 @@ class Command:
         '''Parses through a transcript and extracts the date and city to get
         the weather for (if possible)'''
         city = ""
-        self.splitTranscript = self.transcript.split()
         day = ""
         both = set(self.weatherDayArray).intersection(self.splitTranscript)
         if len(both) == 0:
@@ -190,7 +190,6 @@ class Command:
             return 0
         else:
             self.transcript = self.transcript
-            self.splitTranscript = self.transcript.split()
             index = self.splitTranscript.index("play")
             index2 = 0
             try:
@@ -332,8 +331,32 @@ class Command:
         self.anton.setOven(temp)
 
     def createAlarm(self):
-        '''Future development needed'''
-        pass
+        clock = Clock()
+        if "alarm" in self.transcript:
+            clock.createAlarm(self.date)
+        elif "timer" in self.transcript:
+            clock.createTimer(self.date)
+        elif "remind" in self.transcript:
+            print(self.splitTranscript)
+            i = 100
+            j = 100
+            try:
+                i = self.splitTranscript.index("to")
+            except:
+                pass
+            try:
+                j = self.splitTranscript.index("that")
+            except:
+                pass
+            print(i, j)
+            if j < i:
+                i = j
+            message = self.splitTranscript[i+1:]
+            message = "Hey Nathan, " + " ".join(message)
+            message = message.replace("i", "you")
+            message = message.replace("my", "your")
+            print(message)
+            clock.createReminder(self.date, message)
 
     def ret(self):
         return
