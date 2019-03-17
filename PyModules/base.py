@@ -1,4 +1,6 @@
 import argparse
+import faulthandler
+faulthandler.enable()
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--verbose", "-v", help="Print output from all functions", action="store_true")

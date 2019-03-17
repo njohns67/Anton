@@ -59,8 +59,6 @@ def speechToDate(transcript):
     day = dt.datetime.now().day
     month = dt.datetime.now().month
     year = dt.datetime.now().year
-    print(type(second))
-    print(type(day))
     if "at" in transcript:
         atIndex = transcript.index("at")
         if ':' in transcript[atIndex+1]:
@@ -117,14 +115,8 @@ def speechToDate(transcript):
     if hour > 23:
         hour = 0
         day += 1
-	if hour < dt.datetime.now().hour and day == dt.datetime.now().day:
-		day += 1
-    print(second)
-    print(minute)
-    print(hour)
-    print(day)
-    print(month)
-    print(year)
+        if hour < dt.datetime.now().hour and day == dt.datetime.now().day:
+                day += 1
     try:
         date = dt.datetime(day=day, month=month, year=year, hour=hour, minute=minute, second=second)
     except: 

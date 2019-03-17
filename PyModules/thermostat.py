@@ -10,6 +10,7 @@ class Thermostat:           #Mode 1 for cool, 2 for heat
         self.anton = anton
         self.temp = temp
         self.mode = mode
+        self.modes = [0, 2, 1]
 
     def changeModeDelay(self, wallTime, mode):
         wallTime = mf.subtractTimes(wallTime)
@@ -22,7 +23,9 @@ class Thermostat:           #Mode 1 for cool, 2 for heat
         thread.daemon = True
         thread.start()
 
-    def changeMode(self, mode=(not self.mode)):
+    def changeMode(self, mode=3):
+        if mode == 3:
+            mode = self.modes[self.mode]
         wifiDevices.changeThermostatMode(mode)
         self.mode = mode
 

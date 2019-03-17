@@ -68,7 +68,7 @@ class MPC:
     def skip(self):
         subprocess.Popen(["mpc", "next"])
 
-    def prev(self):
+    def previous(self):
         subprocess.Popen(["mpc", "prev"])
 
     def queueSong(self, song, artist=""):
@@ -101,3 +101,4 @@ class MPC:
 
     def unMute(self):
         self.setVolume(self.volume)
+
