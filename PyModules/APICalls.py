@@ -32,8 +32,8 @@ def getForecast(self, city="Menomonee Falls", day="today"):
     speak = speakArr[0]
     speakRain = speakArr[1]
     rainBool = speakArr[2]
-    self.tts(speak)
     print(speak)
+    self.tts(speak)
     if rainBool:
         print(speakRain)
         self.tts(speakRain)
@@ -164,7 +164,7 @@ def getJoke(self):
     r = requests.get("http://icanhazdadjoke.com", headers={"Accept": "text/plain"})
     joke = "".join(i for i in r.text if ord(i)<128)
     print(joke)
-    self.tts(joke, "delme", 1)
+    self.tts(joke, play=1)
 
 def tts(TEXT, file="/home/pi/Anton/Responses/delme", PLAY=1):
     '''Converts text to speech with google TTS API'''
@@ -177,7 +177,7 @@ def tts(TEXT, file="/home/pi/Anton/Responses/delme", PLAY=1):
     with open(file + ".mp3", "wb") as out:
         out.write(response.audio_content)
     if PLAY == 1:
-        sounds.playMP3(file)
+        sounds.playMP3(file+".mp3")
 
 def play(file):
     '''Plays a given mp3 file'''

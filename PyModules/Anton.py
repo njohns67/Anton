@@ -320,6 +320,8 @@ class Anton:
         thread.start()
 
     def tts(self, text, file="/home/pi/Anton/Responses/delme",  play=1):
+        if self.silentMode:
+            play = 0
         APICalls.tts(text, file, play)
 
     def play(self, response, addDir=1):
