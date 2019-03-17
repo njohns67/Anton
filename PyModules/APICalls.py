@@ -118,45 +118,45 @@ def parseWeatherResponse(response, city, day):
 
 def askQuestion(self, question):
     '''Not used. Future development needed'''
-        url = "http://api.wolframalpha.com/v2/result?"
-        skyCommaArray = ["whos", "whose", "who's", "whats", "what's", "whens", "when's", "wheres", "where's", "whys", "why's", "hows", "how's"]
-        payload = {"input": question, "appid": "XR36L6-RVJQRKE6LL"}
-        answerAppend = ""
-        splitQuestion = question.split()
-        if len(splitQuestion) < 3:
-            return
-        if splitQuestion[1] == "is" or splitQuestion[1] == "are":
-            answer = splitQuestion[2:]
-            answer = " ".join(answer) + " " + splitQuestion[1]
-        elif any(x == splitQuestion[0] for x in skyCommaArray):
-            answer = splitQuestion[1:]
-            answer = " ".join(answer) + " is "
-        else:
-            try:
-                Index = splitQuestion.index("is")
-            except:
-                Index = splitQuestion.index("are")
-            answerAppend = splitQuestion[Index+2:]
-            answerAppend = " ".join(answerAppend)
-            answer = splitQuestion[Index+1] + " " + splitQuestion[Index]
-            if splitQuestion[Index] == "are":
-                answerAppend = splitQuestion[Index-1] + " " + answerAppend
+    url = "http://api.wolframalpha.com/v2/result?"
+    skyCommaArray = ["whos", "whose", "who's", "whats", "what's", "whens", "when's", "wheres", "where's", "whys", "why's", "hows", "how's"]
+    payload = {"input": question, "appid": "XR36L6-RVJQRKE6LL"}
+    answerAppend = ""
+    splitQuestion = question.split()
+    if len(splitQuestion) < 3:
+        return
+    if splitQuestion[1] == "is" or splitQuestion[1] == "are":
+        answer = splitQuestion[2:]
+        answer = " ".join(answer) + " " + splitQuestion[1]
+    elif any(x == splitQuestion[0] for x in skyCommaArray):
+        answer = splitQuestion[1:]
+        answer = " ".join(answer) + " is "
+    else:
+        try:
+            Index = splitQuestion.index("is")
+        except:
+            Index = splitQuestion.index("are")
+        answerAppend = splitQuestion[Index+2:]
+        answerAppend = " ".join(answerAppend)
+        answer = splitQuestion[Index+1] + " " + splitQuestion[Index]
+        if splitQuestion[Index] == "are":
+            answerAppend = splitQuestion[Index-1] + " " + answerAppend
 
 
-        response = requests.get(url,  payload)
-        if response.status_code == 501:
-            print("You'll have to google that yourself")
-            return -1
-        answer = answer +  " " + response.text + " " + answerAppend
-        prevWord = "_"
-        splitAnswer = answer.split()
-        for word in splitAnswer:
-            if word == prevWord:
-                splitAnswer.remove(word)
-            prevWord = word
-        answer = " ".join(splitAnswer)
-        print(answer)
-        self.tts(answer)
+    response = requests.get(url,  payload)
+    if response.status_code == 501:
+        print("You'll have to google that yourself")
+        return -1
+    answer = answer +  " " + response.text + " " + answerAppend
+    prevWord = "_"
+    splitAnswer = answer.split()
+    for word in splitAnswer:
+        if word == prevWord:
+            splitAnswer.remove(word)
+        prevWord = word
+    answer = " ".join(splitAnswer)
+    print(answer)
+    self.tts(answer)
 
 def getJoke(self):
     printable = set(string.printable)
