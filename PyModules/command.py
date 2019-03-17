@@ -32,10 +32,10 @@ class Command:
                          "play": [self.playMedia, False], "skip": [self.anton.isPlaying.skip, False], "volume": [self.changeVolume, False],
                          "beer": [wifiDevices.beerMe, False], "alarm": [self.createAlarm, False], "reminder": [self.createAlarm, False],
                          "timer": [self.createAlarm, False], "remind": [self.createAlarm, False], "calendar": [self.createAlarm, False], 
-                         "pray": [self.playMedia, False], "go back": [self.anton.isPlaying.previous, False], 
-                         "previous": [self.anton.isPlaying.previous, False], "mute": [self.muteMedia, False],
-                         "unmute": [self.unMuteMedia, False], "un-mute": [self.unMuteMedia, False],
-                         "silent": [self.anton.changeMuteMode, False], "tv": [self.anton.roku.power, False], "launch": [self.launchApp, True],
+                         "pray": [self.playMedia, False], "go back": [self.anton.isPlaying.previous, False], "previous": [self.anton.isPlaying.previous, False], 
+                         "mute": [self.anton.isPlaying.mute, False], "silent": [self.anton.toggleSilentMode, False],
+                         "unmute": [self.anton.isPlaying.unMute, False], "un-mute": [self.anton.isPlaying.unMute, False], "quiet": [self.anton.toggleQuietMode, False],
+                         "silent": [self.anton.toggleSilentMode, False], "tv": [self.anton.roku.power, False], "launch": [self.launchApp, True],
                          "open": [self.launchApp, True], "watch": [self.launchApp, True], "type": [self.typeString, True], 
                          "heat": [self.anton.thermostat.changeMode, False], "ac": [self.anton.thermostat.changeMode, False],
                          "a/c": [self.anton.thermostat.changeMode, False], "oven": [self.ovenControl, False],
@@ -98,7 +98,7 @@ class Command:
         thread.start()
 
     def playDing(self, delay=False):
-        if not self.anton.bellsOff:
+        if not self.anton.quietMode:
             p = Popen(["play", self.anton.filePaths["ding"]], stdout=PIPE, stderr=PIPE)
             if delay:
                 self.anton.processes.append(p)
@@ -246,23 +246,6 @@ class Command:
                 self.anton.isPlaying = self.anton.mpc
                 return
 
-    def muteMedia(self):
-        if "mode" in self.splitTranscript:
-            if "on" in self.splitTranscript:
-                self.anton.changeMuteMode(True)
-            elif "off" in self.splitTranscript:
-                self.anton.changeMuteMode(False)
-            elif "toggle" in self.splitTranscript:
-                self.anton.changeMuteMode()
-        else:
-            self.anton.isPlaying.mute()
-
-    def unMuteMedia(self):
-        if "mode" in self.splitTranscript:
-            self.anton.chamgeMuteMode(False)
-        else:
-            self.anton.isPlaying.unMute()
-    
     def changeVolume(self):
         volume = -1
         for word in splitTranscript:

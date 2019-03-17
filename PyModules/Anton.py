@@ -65,8 +65,8 @@ class Anton:
         self.debug = debug          #Setting command flag -d or --debug enables debug mode which allows for input via text
         self.verbose = verbose      #Setting command flag -v or --verbose prints all thread's output
         self.processes = []         #List of processes spawned. Not really used. Just here for posterity's sake
-        self.isMuted = 0            #Silent mode toggle. When on no bells or responses will be played
-        self.bellsOff = 0           #Mute mode. No bells will be played. TODO: Change to quiet mode
+        self.silentMode = 0            #Silent mode toggle. When on no bells or responses will be played
+        self.quietMode = 0           #Mute mode. No bells will be played. TODO: Change to quiet mode
         self.isResponding = 0       #Obsolete. Used previously to pause determining average RMS
         self.endSTT = -1            #Timer variable for recording to timeout after 10 seconds
         self.transcriptTries = 0    #Counter for the number of unusuable transcripts recorded for a keyword before giving up. Max of 2
@@ -284,7 +284,7 @@ class Anton:
         '''Green light signaling the transcript matched a command'''
         def f():
             def g():
-                pr.set_color_delay(r=0, g=255, b=0, delay=.02)
+                pr.set_color(r=0, g=255, b=0)
             thread = Thread(target=g)
             thread.daemon = True
             thread.start()
@@ -325,7 +325,7 @@ class Anton:
     def play(self, response, addDir=1):
         '''Plays a text-to-speech response. The default directory is only added if addDir is true'''
         directory = "/home/pi/Anton/Responses/"
-        if not self.isMuted:
+        if not self.silentMode:
             if addDir:
                 APICalls.play(directory+response)
             else:
@@ -371,15 +371,15 @@ class Anton:
         elif "pandora" in transcript:
             self.isPlaying = self.pandora
 
-    def changeMuteMode(self, mode=3):
-        '''Toggles/changes mute mode state. Will be changed to quiet mode'''
-        if mode == 3:
-            self.bellsOff = not self.bellsOff
-        else:
-            self.bellsOff = mode
+    def toggleSilentMode(self):
+        '''Toggles silent mode'''
+        self.silentMode = not self.silentMode
+
+    def toggleQuietMode(self):
+        self.quietMode = not self.quietMode
 
     def playDong(self):
-        if not self.bellsOff:
+        if not self.quietMode:
             p = Popen(["play", self.filePaths["dong"]], stdout=PIPE, stderr=PIPE)
             self.processes.append(p)
 
