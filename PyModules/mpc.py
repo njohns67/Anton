@@ -98,10 +98,10 @@ class MPC:
         p = subprocess.Popen(["amixer", "set", "Master", "0%"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def setVolume(self, volume):
-        volume *= volume
-        self.anton.tts("Setting the volume to " + str(volume))
+        volume *= 10
         p = subprocess.Popen(["amixer", "set", "Master", str(volume) + "%"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.wait()
+        self.anton.tts("Setting the volume to " + str(int(volume/10)))
         self.volume = volume
 
     def unMute(self):

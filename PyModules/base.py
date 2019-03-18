@@ -53,7 +53,7 @@ def rec2():
 
 model = args.models
 funcs = [lambda: rec1(), lambda: rec2()]
-sensitivity = [.35, .35]
+sensitivity = [.33, .35]
 # capture SIGINT signal, e.g., Ctrl+C
 signal.signal(signal.SIGINT, signal_handler)
 detector = snowboydecoder.HotwordDetector(model, sensitivity=sensitivity)

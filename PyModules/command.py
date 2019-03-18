@@ -52,6 +52,7 @@ class Command:
             self.threadCommand()
             return 
         else:
+            self.anton.endSTT = -1
             return self.command()
 
     def setCommand(self):
@@ -248,23 +249,21 @@ class Command:
 
     def changeVolume(self):
         volume = -1
-        for word in splitTranscript:
+        for word in self.splitTranscript:
             volume = mf.wordToNum(word)
             if volume != -1:
                 break
-        if "up" in transcript:
+        if "up" in self.transcript:
             if volume == -1:
                 volume = 2
             self.anton.play("VolumeUp")
             self.anton.isPlaying.volumeUp(volume)
-        elif "down" in transcript:
+        elif "down" in self.transcript:
             if volume == -1:
                 volume = 2
             self.anton.play("VolumeDown")
             self.anton.isPlaying.volumeDown(volume)
         elif volume != -1:
-            if volume == -1:
-                volume = 2
             self.anton.isPlaying.setVolume(volume)
         else:
             self.anton.play("VolumeUpOrDown")

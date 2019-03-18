@@ -110,7 +110,13 @@ class Anton:
         self.playDong()
         if self.isPlaying != None and self.isPlaying != self.roku:
             self.isPlaying.pause()
-        STTRet = self.speechToText()
+        try:
+            STTRet = self.speechToText()
+        except Exception as e:
+            print(e)
+            print("Unhandled exception. Returning")
+            self.endRecord()
+            return
         if STTRet == -1:
             self.lightFail()
             with open("log.txt", "a") as f:
@@ -223,7 +229,6 @@ class Anton:
                     anton.transcriptTries += 1
                     checkValid = anton.checkTranscript(transcript)
                     if checkValid == -1 and anton.transcriptTries < 2:
-                        sys.stdout.flush()
                         anton.endSTT = 0
                         pass
                     else:
