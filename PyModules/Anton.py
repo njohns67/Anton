@@ -53,7 +53,7 @@ class Anton:
     def __init__(self, debug=0, verbose=0):
         self.power = LED(5)
         self.power.on()
-        self.roku = Roku(self, "192.168.1.75")
+        self.roku = Roku(self)
         self.mpc = MPC(anton=self)
         self.pandora = Pandora(self)
         self.thermostat = Thermostat(self)
@@ -69,7 +69,6 @@ class Anton:
         self.quietMode = 0           #Mute mode. No bells will be played. TODO: Change to quiet mode
         self.isResponding = 0       #Obsolete. Used previously to pause determining average RMS
         self.endSTT = -1            #Timer variable for recording to timeout after 10 seconds
-        self.transcriptTries = 0    #Counter for the number of unusuable transcripts recorded for a keyword before giving up. Max of 2
         self.transcript = ""        #Last transcript recorded
         self.turnLightOff = True    #Allows success light to stay on for 2 seconds instead of going away instantly
         self.recordingInfo = {"minRMS": 12000000, "length": 8, "samplerate": 48000,
@@ -132,13 +131,12 @@ class Anton:
     def endRecord(self):
         '''Resets variables to a pre-recorded state and continues playing music
         if needed'''
-        if self.continuePlaying and self.continuePlaying != self.roku:
+        if self.continuePlaying and self.isPlaying != self.roku:
             self.isPlaying.play()
         while not self.turnLightOff:
             pass
         self.lightOff()
         self.endSTT = -1
-        self.transcriptTries = 0
         self.isRecording = 0
 
     def speechToText(anton):
@@ -226,11 +224,10 @@ class Anton:
                     num_chars_printed = len(transcript)
 
                 else:
-                    anton.transcriptTries += 1
                     checkValid = anton.checkTranscript(transcript)
-                    if checkValid == -1 and anton.transcriptTries < 2:
+                    if checkValid == -1:
                         anton.endSTT = 0
-                        pass
+                        return checkValid
                     else:
                         anton.transcript = transcript
                         return checkValid
