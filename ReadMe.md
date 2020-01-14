@@ -25,7 +25,7 @@ Anton relies on Snowboy for Python3 for hotword detection and must be installed 
 # Commands
 Anton's current hotword is "Hey Anton", but can be changed with a few minor tweaks.
 
-**Current Commands/Features Include:** 
+**Current Commands/Features:** 
 - What's the weather in *city* today/tomorrow/(on day)?
 - Tell me a (dad) joke
 - Set a timer for *x* seconds/minutes/hours and *y* seconds/minutes/hours
@@ -34,13 +34,13 @@ Anton's current hotword is "Hey Anton", but can be changed with a few minor twea
 - Spotify Playback
 - Pandora Playback
 - Set a timer
-
-
-**Future Commands/Features Include:**
-- Beer me
-- Turn on the shower
 - Set the oven to *temperature*
 - Set the thermostat to *temperature*
+
+**Future Commands/Features:**
+- Beer me
+- Turn on the shower
+
 
 
 Most of the commands I intend on implementing rely on other devices to be configured ahead of time.
