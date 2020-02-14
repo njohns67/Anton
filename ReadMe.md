@@ -38,7 +38,7 @@ Anton's current hotword is "Hey Anton", but can be changed with a few minor twea
 - Set the thermostat to *temperature*
 
 **Future Commands/Features:**
-- Beer me
+- Bring me a drink
 - Turn on the shower
 
 
